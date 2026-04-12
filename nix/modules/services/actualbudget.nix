@@ -1,3 +1,4 @@
+{ ... }:
 {
   lib,
   config,
@@ -11,9 +12,6 @@ in
   options.homelab.services.actualbudget = {
     enable = lib.mkEnableOption "Actual Budget";
   };
-  imports = [
-    ./actual-flow.nix
-  ];
   config = lib.mkIf cfg.enable {
     services.restic.backups.default.paths = [
       "${ccfg.dataPath}/actualbudget"

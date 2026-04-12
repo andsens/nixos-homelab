@@ -1,6 +1,5 @@
-{ self, ... }:
+{ self, inputs, ... }@moduleArgs:
 {
-  inputs,
   lib,
   pkgs,
   config,
@@ -107,6 +106,8 @@ in
     inputs.kubetree.nixosModules.default
     self.nixosModules.cilium
     self.nixosModules.service-macros
+  ]
+  ++ map (path: import path moduleArgs) [
     ./workloads/cert-manager.nix
     ./workloads/cilium.nix
     ./workloads/external-dns.nix

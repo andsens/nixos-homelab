@@ -1,11 +1,15 @@
-{ self, ... }:
+{ self, ... }@moduleArgs:
 { ... }:
 {
   imports = [
     self.nixosModules.backup
+  ]
+  ++ map (path: import path moduleArgs) [
+    ./actual-flow.nix
     ./actualbudget.nix
     ./alloy.nix
     ./flood.nix
+    ./ghostbudget.nix
     ./ghostfolio.nix
     ./grafana.nix
     ./homepage.nix

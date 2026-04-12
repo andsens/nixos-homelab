@@ -1,3 +1,4 @@
+{ ... }:
 {
   lib,
   config,
@@ -11,9 +12,6 @@ in
   options.homelab.services.ghostfolio = {
     enable = lib.mkEnableOption "Ghostfolio";
   };
-  imports = [
-    ./ghostbudget.nix
-  ];
   # TODO: Add tini
   config = lib.mkIf cfg.enable {
     homelab.services.homepage.envByName.HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN.valueFrom.secretKeyRef = {

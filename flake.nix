@@ -1,8 +1,20 @@
 {
   description = "NixOS Homelab";
   inputs = {
+    systems.url = "github:nix-systems/default-linux";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    kubetree = {
+      url = "github:andsens/nix-kubetree";
+      # url = "git+file:///home/anders/Workspace/nix-kubetree";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
+    nixhelm = {
+      url = "github:nix-community/nixhelm";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    kube-generators.url = "github:farcaller/nix-kube-generators";
   };
   outputs =
     {
@@ -22,6 +34,7 @@
         inherit (flake-parts-lib) importApply;
       in
       {
+        systems = import systems;
         flake = {
           lib = {
             ip = import ./nix/lib/ip.nix { inherit lib; };
