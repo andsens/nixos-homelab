@@ -5,10 +5,10 @@
   ...
 }:
 let
-  cfg = config.homeServer.zfs;
+  cfg = config.homelab.zfs;
 in
 {
-  options.homeServer.zfs.zed = {
+  options.homelab.zfs.zed = {
     zedlets = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       description = "List of zedlets to enable.";
@@ -64,7 +64,7 @@ in
     literalSettings = lib.mkOption {
       type = lib.types.lines;
       example = builtins.literalExpression ''
-        homeServer.zfs.zed.literalSettings = ${"''"}
+        homelab.zfs.zed.literalSettings = ${"''"}
           . /etc/zfs/pushover-credentials.sh
         ${"''"};
 
@@ -73,13 +73,13 @@ in
         ZED_PUSHOVER_USER="gAFC9TEEdyayByq0pMtMHWopFq7kQ9"
       '';
       description = ''
-        Additional settings for zed.rc that will be appended to the rendered form of `homeServer.zfs.zed.settings`.
+        Additional settings for zed.rc that will be appended to the rendered form of `homelab.zfs.zed.settings`.
         Useful when configuring e.g. credentials that should not be part of the nix store.
       '';
     };
   };
   config = lib.mkIf cfg.enable {
-    homeServer.zfs.zed.zedlets = [
+    homelab.zfs.zed.zedlets = [
       "all-syslog.sh"
       "resilver_finish-start-scrub.sh"
 
@@ -95,9 +95,9 @@ in
 
       "history_event-zfs-list-cacher.sh"
     ];
-    homeServer.zfs.zed.settings.ZED_USE_ENCLOSURE_LEDS = lib.mkDefault true;
-    homeServer.zfs.zed.settings.ZED_SYSLOG_SUBCLASS_EXCLUDE = "history_event";
-    homeServer.zfs.zed.literalSettings = ''
+    homelab.zfs.zed.settings.ZED_USE_ENCLOSURE_LEDS = lib.mkDefault true;
+    homelab.zfs.zed.settings.ZED_SYSLOG_SUBCLASS_EXCLUDE = "history_event";
+    homelab.zfs.zed.literalSettings = ''
       PATH=${
         lib.makeBinPath [
           pkgs.diffutils # Added

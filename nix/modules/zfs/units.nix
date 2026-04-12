@@ -5,7 +5,7 @@
   ...
 }:
 let
-  cfg = config.homeServer.zfs;
+  cfg = config.homelab.zfs;
   zfs = lib.getExe' pkgs.zfs "zfs";
   zpool = lib.getExe' pkgs.zfs "zpool";
   zed = lib.getExe' pkgs.zfs "zed";

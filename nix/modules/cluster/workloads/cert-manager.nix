@@ -5,7 +5,7 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
+  ccfg = config.homelab.cluster;
   kubelib = inputs.kube-generators.lib { inherit pkgs; };
   charts = inputs.nixhelm.charts { inherit pkgs; };
   webhook = pkgs.buildGo125Module rec {

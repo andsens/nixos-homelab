@@ -6,8 +6,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.actualbudget;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.actualbudget;
   flakePkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
   nodejs = pkgs.nodejs_24;
   actual-flow = pkgs.buildNpmPackage rec {
@@ -63,7 +63,7 @@ let
   };
 in
 {
-  options.homeServer.services.actualbudget = {
+  options.homelab.services.actualbudget = {
     importSchedule = lib.mkOption {
       description = "Cronjob notation of when the actual-flow import runs";
       type = lib.types.nullOr lib.types.str;
@@ -128,7 +128,7 @@ in
     };
   };
   config = lib.mkIf (cfg.enable && cfg.importSchedule != null) {
-    homeServer.cluster.secretsManager.importSecrets.lunchflow-api-key = {
+    homelab.cluster.secretsManager.importSecrets.lunchflow-api-key = {
       extractCommands.LUNCHFLOW_API_KEY = "source /etc/secrets.d/lunchflow-api-key.env; echo $LUNCHFLOW_API_KEY";
       destinations = [ "actualbudget" ];
     };

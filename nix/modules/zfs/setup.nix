@@ -5,10 +5,10 @@
   ...
 }:
 let
-  cfg = config.homeServer.zfs;
+  cfg = config.homelab.zfs;
 in
 {
-  options.homeServer.zfs = {
+  options.homelab.zfs = {
     cachePools = lib.mkOption {
       description = "List of ZFS pools to enable caching for";
       type = lib.types.listOf lib.types.str;

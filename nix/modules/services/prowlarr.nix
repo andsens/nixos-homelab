@@ -5,8 +5,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.prowlarr;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.prowlarr;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/prowlarr";
     copyToRoot = [
@@ -32,11 +32,11 @@ let
   };
 in
 {
-  options.homeServer.services.prowlarr = {
+  options.homelab.services.prowlarr = {
     enable = lib.mkEnableOption "prowlarr";
   };
   config = lib.mkIf cfg.enable {
-    homeServer.services.homepage.services.Managers.Prowlarr = {
+    homelab.services.homepage.services.Managers.Prowlarr = {
       sort = 200;
       icon = "prowlarr.png";
       description = "Index scraper";
@@ -47,15 +47,15 @@ in
         key = "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}";
       };
     };
-    homeServer.cluster.secretsManager.importSecrets.prowlarr-api-key = {
+    homelab.cluster.secretsManager.importSecrets.prowlarr-api-key = {
       extractCommands.PROWLARR_API_KEY = ''xq -q 'Config>ApiKey' "${ccfg.dataPath}/prowlarr/config.xml"'';
       destinations = [ "homepage" ];
     };
-    homeServer.services.homepage.envByName.HOMEPAGE_VAR_PROWLARR_API_KEY.valueFrom.secretKeyRef = {
+    homelab.services.homepage.envByName.HOMEPAGE_VAR_PROWLARR_API_KEY.valueFrom.secretKeyRef = {
       name = "prowlarr-api-key";
       key = "PROWLARR_API_KEY";
     };
-    homeServer.services.homepage.allowEgress = [ "prowlarr" ];
+    homelab.services.homepage.allowEgress = [ "prowlarr" ];
     services.restic.backups.default.paths = [ "${ccfg.dataPath}/prowlarr/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.prowlarr.content = {

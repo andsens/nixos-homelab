@@ -4,11 +4,11 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.ghostfolio;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.ghostfolio;
 in
 {
-  options.homeServer.services.ghostfolio = {
+  options.homelab.services.ghostfolio = {
     enable = lib.mkEnableOption "Ghostfolio";
   };
   imports = [
@@ -16,11 +16,11 @@ in
   ];
   # TODO: Add tini
   config = lib.mkIf cfg.enable {
-    homeServer.services.homepage.envByName.HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN.valueFrom.secretKeyRef = {
+    homelab.services.homepage.envByName.HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN.valueFrom.secretKeyRef = {
       name = "ghostfolio-api-token";
       key = "GHOSTFOLIO_API_TOKEN";
     };
-    homeServer.services = {
+    homelab.services = {
       postgresql.enable = true;
       postgresql.databases.ghostfolio.backup.enable = true;
       redis.enable = true;
@@ -41,7 +41,7 @@ in
         };
       };
     };
-    homeServer.cluster.secretsManager = {
+    homelab.cluster.secretsManager = {
       importSecrets.ghostfolio-token = {
         extractCommands.GHOSTFOLIO_TOKEN = "source /etc/secrets.d/ghostfolio-token.env; echo $GHOSTFOLIO_TOKEN";
       };

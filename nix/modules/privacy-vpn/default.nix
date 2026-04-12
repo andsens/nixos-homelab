@@ -5,10 +5,10 @@
   ...
 }:
 let
-  cfg = config.homeServer.privacyVPN;
+  cfg = config.homelab.privacyVPN;
 in
 {
-  options.homeServer.privacyVPN = {
+  options.homelab.privacyVPN = {
     enable = lib.mkEnableOption "the privacy VPN";
     clientIP4 = lib.mkOption {
       description = "Internal tunnel IPv4 of the client";

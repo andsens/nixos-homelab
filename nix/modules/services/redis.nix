@@ -4,11 +4,11 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.redis;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.redis;
 in
 {
-  options.homeServer.services.redis = {
+  options.homelab.services.redis = {
     enable = lib.mkEnableOption "Redis";
   };
   config = lib.mkIf cfg.enable {

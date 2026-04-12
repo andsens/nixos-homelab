@@ -24,7 +24,6 @@
       {
         flake = {
           lib = {
-            helpers = import ./nix/lib/helpers.nix { inherit lib; };
             ip = import ./nix/lib/ip.nix { inherit lib; };
             k8s = import ./nix/lib/k8s.nix { inherit lib; };
           };

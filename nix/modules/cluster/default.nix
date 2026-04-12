@@ -7,7 +7,7 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
+  ccfg = config.homelab.cluster;
   flakePkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
   ipv4 = self.lib.ip.v4;
   kubelib = inputs.kube-generators.lib { inherit pkgs; };
@@ -33,8 +33,8 @@ let
   });
 in
 {
-  options.homeServer.cluster = {
-    enable = lib.mkEnableOption "the homeServer cluster";
+  options.homelab.cluster = {
+    enable = lib.mkEnableOption "the homelab cluster";
     containers.debug = lib.mkEnableOption "debugging tools in container images";
     enableIPv4 = lib.mkOption {
       description = "IPv4 support";
@@ -43,10 +43,10 @@ in
     };
     enableIPv6 = lib.mkEnableOption "IPv6 support";
     debugTools = lib.mkOption {
-      description = "Tools to embed in all container images when \${config.homeServer.containers.debug} == true";
+      description = "Tools to embed in all container images when \${config.homelab.containers.debug} == true";
       type = lib.types.listOf lib.types.package;
       defaultText = "When debug is on: bash, coreutils, netcat, curl, jq, dig, ping, ip, tcpdump";
-      default = lib.optionals config.homeServer.cluster.containers.debug [
+      default = lib.optionals config.homelab.cluster.containers.debug [
         pkgs.bash
         pkgs.coreutils
         pkgs.netcat-gnu

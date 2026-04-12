@@ -6,8 +6,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.zfs-exporter;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.zfs-exporter;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/zfs-exporter";
     copyToRoot = [
@@ -22,12 +22,12 @@ let
   };
 in
 {
-  options.homeServer.services.zfs-exporter = {
+  options.homelab.services.zfs-exporter = {
     enable = lib.mkEnableOption "zfs-exporter";
   };
   config = lib.mkIf cfg.enable {
     services.k3s.images = [ image ];
-    homeServer.services.alloy.allowEgress = [ "zfs-exporter" ];
+    homelab.services.alloy.allowEgress = [ "zfs-exporter" ];
     kubetree.resources.zfs-exporter = {
       namespace = (self.lib.k8s.createNamespace { namespace = "zfs-exporter"; });
       service-monitor = {

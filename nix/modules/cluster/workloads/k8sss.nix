@@ -7,8 +7,8 @@
   ...
 }:
 let
-  cfg = config.homeServer.cluster.k8sss;
-  ccfg = config.homeServer.cluster;
+  cfg = config.homelab.cluster.k8sss;
+  ccfg = config.homelab.cluster;
   kubelib = inputs.kube-generators.lib { inherit pkgs; };
   adminSSHKeys = lib.splitString "\n" (
     lib.trim (
@@ -33,7 +33,7 @@ let
   );
 in
 {
-  options.homeServer.cluster.k8sss = {
+  options.homelab.cluster.k8sss = {
     # Generate JWKs with `step crypto jwk create --force --use sig --from-pem=<(step kms key $keyuri) /dev/stdout /dev/null | jq -c`
     adminKeys = lib.mkOption {
       description = "List of JWKs that may request a kubeapi client certificate";

@@ -5,7 +5,7 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
+  ccfg = config.homelab.cluster;
   external-dns = pkgs.buildGo125Module rec {
     name = "external-dns";
     version = "v0.20.0";
@@ -32,7 +32,7 @@ let
   };
 in
 {
-  options.homeServer.cluster.external-dns = {
+  options.homelab.cluster.external-dns = {
     deploymentOverlay = lib.mkOption {
       description = "Strategic merge overlay for external-dns deployment";
       type = lib.types.anything;
@@ -88,7 +88,7 @@ in
                   RecordError
                 '';
                 EXTERNAL_DNS_TXT_PREFIX = "edns-%{record_type}.";
-                EXTERNAL_DNS_TXT_OWNER_ID = "home-server";
+                EXTERNAL_DNS_TXT_OWNER_ID = "homelab";
                 EXTERNAL_DNS_EVENTS = "1";
                 EXTERNAL_DNS_INTERVAL = "5m";
               };
@@ -123,7 +123,7 @@ in
                   RecordError
                 '';
                 EXTERNAL_DNS_TXT_PREFIX = "edns-%{record_type}.";
-                EXTERNAL_DNS_TXT_OWNER_ID = "home-server-node-source";
+                EXTERNAL_DNS_TXT_OWNER_ID = "homelab-node-source";
                 EXTERNAL_DNS_EVENTS = "1";
                 EXTERNAL_DNS_INTERVAL = "5m";
               };

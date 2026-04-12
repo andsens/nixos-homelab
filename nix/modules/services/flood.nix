@@ -5,8 +5,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.flood;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.flood;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/flood";
     copyToRoot = [
@@ -27,11 +27,11 @@ let
   };
 in
 {
-  options.homeServer.services.flood = {
+  options.homelab.services.flood = {
     enable = lib.mkEnableOption "flood";
   };
   config = lib.mkIf cfg.enable {
-    homeServer.services.homepage.services.Download.Flood = {
+    homelab.services.homepage.services.Download.Flood = {
       icon = "flood.png";
       description = "rTorrent WebUI";
       href = "https://flood.${ccfg.domain}";
@@ -40,8 +40,8 @@ in
         url = "http://flood.flood:3000";
       };
     };
-    homeServer.services.rtorrent.enable = true;
-    homeServer.services.homepage.allowEgress = [ "flood" ];
+    homelab.services.rtorrent.enable = true;
+    homelab.services.homepage.allowEgress = [ "flood" ];
     services.k3s.images = [ image ];
     kubetree.resources.flood.content = {
       apiVersion = "cluster.local";
@@ -62,7 +62,7 @@ in
             "--auth=none"
           ];
           portsByName.web = 3000;
-          hostMounts."${config.homeServer.services.rtorrent.downloadPath}".readOnly = true;
+          hostMounts."${config.homelab.services.rtorrent.downloadPath}".readOnly = true;
           hostMounts."${ccfg.dataPath}/rtorrent".readOnly = true;
           livenessProbe.httpGet.port = "web";
           readinessProbe.httpGet.port = "web";

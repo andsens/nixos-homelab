@@ -3,7 +3,7 @@
   ...
 }:
 {
-  options.homeServer.cluster = {
+  options.homelab.cluster = {
     localLANCIDR4 = lib.mkOption {
       description = "IPv4 CIDR of the local LAN";
       type = lib.types.nullOr lib.types.str;

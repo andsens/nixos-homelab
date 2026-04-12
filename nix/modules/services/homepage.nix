@@ -5,8 +5,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.homepage;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.homepage;
   backgroundImage = pkgs.fetchurl {
     name = "backgroundImage.png";
     url = "https://images.unsplash.com/photo-1502790671504-542ad42d5189?auto=format&fit=crop&w=2560&q=80";
@@ -49,7 +49,7 @@ let
     ));
 in
 {
-  options.homeServer.services.homepage = {
+  options.homelab.services.homepage = {
     enable = lib.mkEnableOption "homepage";
     allowEgress = lib.mkOption {
       description = "Which services homepage should be allowed access to";
@@ -73,7 +73,7 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homeServer.services.homepage.services.Media = {
+    homelab.services.homepage.services.Media = {
       sort = lib.mkDefault 50;
       layout = lib.mkDefault {
         header = false;
@@ -81,7 +81,7 @@ in
         columns = 3;
       };
     };
-    homeServer.services.homepage.services.Managers = {
+    homelab.services.homepage.services.Managers = {
       sort = lib.mkDefault 100;
       layout = lib.mkDefault {
         header = false;
@@ -89,7 +89,7 @@ in
         columns = 3;
       };
     };
-    homeServer.services.homepage.services.Download = {
+    homelab.services.homepage.services.Download = {
       sort = lib.mkDefault 150;
       layout = lib.mkDefault {
         header = false;
@@ -97,7 +97,7 @@ in
         columns = 3;
       };
     };
-    homeServer.services.homepage.services.Finance = {
+    homelab.services.homepage.services.Finance = {
       sort = lib.mkDefault 150;
       layout = lib.mkDefault {
         header = false;
@@ -105,7 +105,7 @@ in
         columns = 3;
       };
     };
-    homeServer.services.homepage.services.Monitoring = {
+    homelab.services.homepage.services.Monitoring = {
       sort = lib.mkDefault 150;
       layout = lib.mkDefault {
         header = false;

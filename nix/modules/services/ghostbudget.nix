@@ -5,8 +5,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.ghostfolio;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.ghostfolio;
   nodejs = pkgs.nodejs_24;
   ghostbudget = pkgs.buildNpmPackage rec {
     inherit nodejs;
@@ -59,7 +59,7 @@ let
   };
 in
 {
-  options.homeServer.services.ghostfolio = {
+  options.homelab.services.ghostfolio = {
     importSchedule = lib.mkOption {
       description = "Cronjob notation of when the ghostbudget sync runs";
       type = lib.types.nullOr lib.types.str;
@@ -103,15 +103,14 @@ in
     };
   };
   config =
-    lib.mkIf
-      (cfg.enable && cfg.importSchedule != null && config.homeServer.services.actualbudget.enable)
+    lib.mkIf (cfg.enable && cfg.importSchedule != null && config.homelab.services.actualbudget.enable)
       {
         services.k3s.images = [ ghostbudgetImage ];
         /**
           $ cat /etc/secrets.d/ghostfolio-token.env
           GHOSTFOLIO_TOKEN='0e3e75234abc68f4378a86b3f4b32a19...'
         */
-        homeServer.cluster.secretsManager.importSecrets.ghostfolio-token.destinations = [ "ghostfolio" ];
+        homelab.cluster.secretsManager.importSecrets.ghostfolio-token.destinations = [ "ghostfolio" ];
         kubetree.resources.ghostbudget = {
           config = {
             apiVersion = "v1";

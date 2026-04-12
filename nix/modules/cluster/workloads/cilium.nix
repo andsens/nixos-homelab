@@ -6,12 +6,12 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
+  ccfg = config.homelab.cluster;
   kubelib = inputs.kube-generators.lib { inherit pkgs; };
   charts = inputs.nixhelm.charts { inherit pkgs; };
 in
 {
-  options.homeServer.cluster = {
+  options.homelab.cluster = {
     lbCidr4 = lib.mkOption {
       description = "IPv4 CIDR for the load balancers";
       type = lib.types.str;
@@ -23,9 +23,9 @@ in
     };
     firewall.enable = lib.mkEnableOption "the Cilium host firewall (disables the NixOS firewall)";
     masquerade.enable = lib.mkOption {
-      description = "Whether to turn on masquerading (automatically turned on if \${config.homeServer.privacyVPN.enable} is on)";
+      description = "Whether to turn on masquerading (automatically turned on if \${config.homelab.privacyVPN.enable} is on)";
       type = lib.types.bool;
-      default = config.homeServer.privacyVPN.enable;
+      default = config.homelab.privacyVPN.enable;
     };
     ciliumConfig = lib.mkOption {
       description = "Additional Cilium helm configuration values to apply";
@@ -57,8 +57,8 @@ in
   config = {
     assertions = [
       {
-        assertion = !config.homeServer.privacyVPN.enable || ccfg.masquerade.enable;
-        message = "In order to use the privacy VPN, masquerading must be enabled (homeServer.cluster.masquerade.enable)";
+        assertion = !config.homelab.privacyVPN.enable || ccfg.masquerade.enable;
+        message = "In order to use the privacy VPN, masquerading must be enabled (homelab.cluster.masquerade.enable)";
       }
     ];
     services.k3s.disable = [
@@ -88,7 +88,7 @@ in
             bgpControlPlane.enabled = ccfg.bgp.enable;
             nodeIPAM.enabled = true; # TODO: Needed?
 
-            egressGateway.enabled = config.homeServer.privacyVPN.enable;
+            egressGateway.enabled = config.homelab.privacyVPN.enable;
 
             tls.secretsNamespace.name = "cilium";
             operator.replicas = 1;

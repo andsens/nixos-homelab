@@ -5,8 +5,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.sonarr;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.sonarr;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/sonarr";
     copyToRoot = [
@@ -32,7 +32,7 @@ let
   };
 in
 {
-  options.homeServer.services.sonarr = {
+  options.homelab.services.sonarr = {
     enable = lib.mkEnableOption "sonarr";
     mountPaths = lib.mkOption {
       description = "Paths from the host to mirror into the container";
@@ -41,7 +41,7 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homeServer.services.homepage.services.Managers.Sonarr = {
+    homelab.services.homepage.services.Managers.Sonarr = {
       sort = 50;
       icon = "sonarr.png";
       description = "TV Show library manager";
@@ -52,15 +52,15 @@ in
         key = "{{HOMEPAGE_VAR_SONARR_API_KEY}}";
       };
     };
-    homeServer.cluster.secretsManager.importSecrets.sonarr-api-key = {
+    homelab.cluster.secretsManager.importSecrets.sonarr-api-key = {
       extractCommands.SONARR_API_KEY = ''xq -q 'Config>ApiKey' "${ccfg.dataPath}/sonarr/config.xml"'';
       destinations = [ "homepage" ];
     };
-    homeServer.services.homepage.envByName.HOMEPAGE_VAR_SONARR_API_KEY.valueFrom.secretKeyRef = {
+    homelab.services.homepage.envByName.HOMEPAGE_VAR_SONARR_API_KEY.valueFrom.secretKeyRef = {
       name = "sonarr-api-key";
       key = "SONARR_API_KEY";
     };
-    homeServer.services.homepage.allowEgress = [ "sonarr" ];
+    homelab.services.homepage.allowEgress = [ "sonarr" ];
     services.restic.backups.default.paths = [ "${ccfg.dataPath}/sonarr/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.sonarr.content = {
@@ -98,11 +98,11 @@ in
             };
             hostMounts =
               (lib.mergeAttrsList (map (path: { "${path}" = { }; }) cfg.mountPaths))
-              // (lib.optionalAttrs config.homeServer.services.rtorrent.enable {
-                "${config.homeServer.services.rtorrent.downloadPath}".name = "bt-downloads";
+              // (lib.optionalAttrs config.homelab.services.rtorrent.enable {
+                "${config.homelab.services.rtorrent.downloadPath}".name = "bt-downloads";
               })
-              // (lib.optionalAttrs config.homeServer.services.sabnzbd.enable {
-                "${config.homeServer.services.sabnzbd.downloadPath}".name = "nzb-downloads";
+              // (lib.optionalAttrs config.homelab.services.sabnzbd.enable {
+                "${config.homelab.services.sabnzbd.downloadPath}".name = "nzb-downloads";
               });
             volumeMountsByPath."/tmp" = "tmp";
           };

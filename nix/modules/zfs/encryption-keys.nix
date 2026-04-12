@@ -5,7 +5,7 @@
   ...
 }:
 let
-  cfg = config.homeServer.zfs;
+  cfg = config.homelab.zfs;
   zfs-encrypt-key-tpm2 = pkgs.writeShellScriptBin "zfs-encrypt-key-tpm2" ''
     fatal() { printf "%s\n" "$1" >&2; exit 1; }
     main() {

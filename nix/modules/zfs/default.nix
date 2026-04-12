@@ -4,7 +4,7 @@
   ...
 }:
 {
-  options.homeServer.zfs = {
+  options.homelab.zfs = {
     enable = lib.mkEnableOption "enable zfs support";
   };
   imports = [

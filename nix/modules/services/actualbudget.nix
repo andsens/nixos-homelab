@@ -4,11 +4,11 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.actualbudget;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.actualbudget;
 in
 {
-  options.homeServer.services.actualbudget = {
+  options.homelab.services.actualbudget = {
     enable = lib.mkEnableOption "Actual Budget";
   };
   imports = [

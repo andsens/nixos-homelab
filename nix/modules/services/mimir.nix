@@ -4,11 +4,11 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.mimir;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.mimir;
 in
 {
-  options.homeServer.services.mimir = {
+  options.homelab.services.mimir = {
     enable = lib.mkEnableOption "Mimir";
     retention = lib.mkOption {
       description = "How long metrics should be kept";
@@ -18,7 +18,7 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homeServer.services.alloy.allowEgress = [ "mimir" ];
+    homelab.services.alloy.allowEgress = [ "mimir" ];
     kubetree.resources.mimir = {
       config = {
         apiVersion = "v1";

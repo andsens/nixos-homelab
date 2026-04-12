@@ -6,8 +6,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.smartctl-exporter;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.smartctl-exporter;
   smartctlExporter = pkgs.buildGo125Module rec {
     name = "smartctl_exporter";
     version = "0.14.0-1";
@@ -35,12 +35,12 @@ let
   };
 in
 {
-  options.homeServer.services.smartctl-exporter = {
+  options.homelab.services.smartctl-exporter = {
     enable = lib.mkEnableOption "smartctl-exporter";
   };
   config = lib.mkIf cfg.enable {
     services.k3s.images = [ image ];
-    homeServer.services.alloy.allowEgress = [ "smartctl-exporter" ];
+    homelab.services.alloy.allowEgress = [ "smartctl-exporter" ];
     kubetree.resources.smartctl-exporter = {
       namespace = (self.lib.k8s.createNamespace { namespace = "smartctl-exporter"; });
       service-monitor = {

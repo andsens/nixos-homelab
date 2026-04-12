@@ -1,7 +1,7 @@
 { lib, ... }:
 {
   # https://github.com/LumiGuide/lumi-example/blob/92d614f3f592d30924258328bae4026922b7fd0a/nix/lib.nix#L41-L89
-  ip.v4 = rec {
+  v4 = rec {
     ip = a: b: c: d: prefixLength: {
       inherit
         a

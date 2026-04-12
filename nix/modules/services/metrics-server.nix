@@ -7,16 +7,16 @@
   ...
 }:
 let
-  cfg = config.homeServer.services.metrics-server;
+  cfg = config.homelab.services.metrics-server;
   kubelib = inputs.kube-generators.lib { inherit pkgs; };
 in
 {
-  options.homeServer.services.metrics-server = {
+  options.homelab.services.metrics-server = {
     enable = lib.mkEnableOption "metrics-server";
   };
   config = lib.mkIf cfg.enable {
     networking.firewall.allowedTCPPorts = lib.optional config.networking.firewall.enable 10250;
-    homeServer.services.homepage.widgets.resources = {
+    homelab.services.homepage.widgets.resources = {
       sort = lib.mkDefault 100;
       backend = "resources";
       expanded = true;
@@ -24,7 +24,7 @@ in
       memory = true;
       network = "default";
     };
-    homeServer.services.homepage.allowEgress = [ "metrics-server" ];
+    homelab.services.homepage.allowEgress = [ "metrics-server" ];
     services.k3s.disable = [ "metrics-server" ];
     services.k3s.manifests.metrics-server-release.source =
       self.lib.k8s.patchManifest { inherit pkgs; }

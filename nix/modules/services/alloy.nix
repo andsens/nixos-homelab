@@ -6,11 +6,11 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.alloy;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.alloy;
 in
 {
-  options.homeServer.services.alloy = {
+  options.homelab.services.alloy = {
     enable = lib.mkEnableOption "alloy";
     allowEgress = lib.mkOption {
       description = "Which services llo should be allowed access to";

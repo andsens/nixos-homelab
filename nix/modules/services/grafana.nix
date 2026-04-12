@@ -4,11 +4,11 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.grafana;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.grafana;
 in
 {
-  options.homeServer.services.grafana = {
+  options.homelab.services.grafana = {
     enable = lib.mkEnableOption "grafana";
     image = lib.mkOption {
       description = "Repo url of the Grafana image to run";
@@ -17,7 +17,7 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homeServer.services = {
+    homelab.services = {
       postgresql.databases.grafana.backup.enable = true;
       homepage.allowEgress = [ "grafana" ];
       homepage.services.Monitoring.Grafana = {
@@ -48,7 +48,7 @@ in
         data."grafana.ini" = builtins.readFile ./grafana.ini;
         data."datasources.yaml" = builtins.toJSON {
           apiVersion = 1;
-          datasources = lib.optional config.homeServer.services.mimir.enable {
+          datasources = lib.optional config.homelab.services.mimir.enable {
             name = "Mimir";
             uid = "mimir";
             type = "prometheus";
@@ -64,7 +64,7 @@ in
               timeInterval = "30s";
             };
           };
-          deleteDatasources = lib.optional (!config.homeServer.services.mimir.enable) "mimir";
+          deleteDatasources = lib.optional (!config.homelab.services.mimir.enable) "mimir";
         };
       };
       service-macro = {

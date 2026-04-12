@@ -6,8 +6,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.plex;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.plex;
   flakePkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/plex";
@@ -36,7 +36,7 @@ let
   };
 in
 {
-  options.homeServer.services.plex = {
+  options.homelab.services.plex = {
     # Run `kubectl port-forward -n plex plex-... 32400` after startup to set it up
     # The setup procedure is only enabled when accessing the server via localhost:32400/web
     enable = lib.mkEnableOption "Plex Media Server";
@@ -52,7 +52,7 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homeServer.services.homepage.services.Media.Plex = {
+    homelab.services.homepage.services.Media.Plex = {
       icon = "plex.png";
       description = "Media center";
       href = "https://plex.${ccfg.domain}";
@@ -67,15 +67,15 @@ in
         key = "{{HOMEPAGE_VAR_PLEX_API_KEY}}";
       };
     };
-    homeServer.cluster.secretsManager.importSecrets.plex-api-key = {
+    homelab.cluster.secretsManager.importSecrets.plex-api-key = {
       extractCommands.PLEX_API_KEY = ''xq -x '//Preferences/@PlexOnlineToken' "${ccfg.dataPath}/plex/Library/Application Support/Plex Media Server/Preferences.xml"'';
       destinations = [ "homepage" ];
     };
-    homeServer.services.homepage.envByName.HOMEPAGE_VAR_PLEX_API_KEY.valueFrom.secretKeyRef = {
+    homelab.services.homepage.envByName.HOMEPAGE_VAR_PLEX_API_KEY.valueFrom.secretKeyRef = {
       name = "plex-api-key";
       key = "PLEX_API_KEY";
     };
-    homeServer.services.homepage.allowEgress = [ "plex" ];
+    homelab.services.homepage.allowEgress = [ "plex" ];
     services.restic.backups.default.paths = [
       "${ccfg.dataPath}/plex/Library/Application Support/Plex Media Server"
     ];

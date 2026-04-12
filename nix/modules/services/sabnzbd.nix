@@ -6,8 +6,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.sabnzbd;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.sabnzbd;
   flakePkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/sabnzbd";
@@ -34,7 +34,7 @@ let
   };
 in
 {
-  options.homeServer.services.sabnzbd = {
+  options.homelab.services.sabnzbd = {
     enable = lib.mkEnableOption "sabnzbd";
     downloadPath = lib.mkOption {
       description = "Download directory";
@@ -47,7 +47,7 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homeServer.services.homepage.services.Download.SABnzbd = {
+    homelab.services.homepage.services.Download.SABnzbd = {
       sort = 50;
       icon = "sabnzbd.png";
       description = "The automated Usenet download tool ";
@@ -58,15 +58,15 @@ in
         key = "{{HOMEPAGE_VAR_SABNZBD_API_KEY}}";
       };
     };
-    homeServer.cluster.secretsManager.importSecrets.sabnzbd-api-key = {
+    homelab.cluster.secretsManager.importSecrets.sabnzbd-api-key = {
       extractCommands.SABNZBD_API_KEY = ''grep '^api_key = ' "${ccfg.dataPath}/sabnzbd/sabnzbd.ini" | cut -d ' ' -f3'';
       destinations = [ "homepage" ];
     };
-    homeServer.services.homepage.envByName.HOMEPAGE_VAR_SABNZBD_API_KEY.valueFrom.secretKeyRef = {
+    homelab.services.homepage.envByName.HOMEPAGE_VAR_SABNZBD_API_KEY.valueFrom.secretKeyRef = {
       name = "sabnzbd-api-key";
       key = "SABNZBD_API_KEY";
     };
-    homeServer.services.homepage.allowEgress = [ "sabnzbd" ];
+    homelab.services.homepage.allowEgress = [ "sabnzbd" ];
     services.restic.backups.default.paths = [ "${ccfg.dataPath}/sabnzbd/backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.sabnzbd = {
@@ -77,7 +77,7 @@ in
         spec = {
           allowIngress = [ "gateway" ];
           allowEgress = [ "internet" ];
-          template.metadata.labels = lib.optionalAttrs (config.homeServer.privacyVPN.enable) {
+          template.metadata.labels = lib.optionalAttrs (config.homelab.privacyVPN.enable) {
             "cluster.local/egress-gateway" = "privacy-vpn";
           };
           template.servicePodSpec = {

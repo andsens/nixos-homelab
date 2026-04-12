@@ -6,8 +6,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.clientVPN;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.clientVPN;
   flakePkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
   ipv4 = self.lib.ip.v4;
   listenPort = 51820;
@@ -36,7 +36,7 @@ let
   };
 in
 {
-  options.homeServer.clientVPN = {
+  options.homelab.clientVPN = {
     enable = lib.mkEnableOption "the client VPN gateway";
     lbCidr4 = lib.mkOption {
       description = "IPv4 CIDR for the gateways";
@@ -82,7 +82,7 @@ in
                 description = "List of VPN client public keys, the order dictates the IP assigned from the CIDR (from x.y.z.2 onwards)";
                 type = lib.types.listOf lib.types.str;
               };
-              # run `nix build '.#nixosConfigurations."<HOSTNAME>".config.homeServer.clientVPN.groups.<GROUPNAME>.clientConfig' --impure` to output the payload
+              # run `nix build '.#nixosConfigurations."<HOSTNAME>".config.homelab.clientVPN.groups.<GROUPNAME>.clientConfig' --impure` to output the payload
               clientConfig = lib.mkOption {
                 description = "A derivation that specifies the wireguard client configuration";
                 type = lib.types.package;
@@ -112,7 +112,7 @@ in
   };
   config = lib.mkIf cfg.enable {
     services.k3s.images = [ image ];
-    homeServer.cluster.secretsManager.importSecrets.client-vpn-private-keys = {
+    homelab.cluster.secretsManager.importSecrets.client-vpn-private-keys = {
       extractCommands = lib.mapAttrs' (
         group: spec: lib.nameValuePair group "cat /etc/secrets.d/${group}-vpn.key"
       ) cfg.groups;

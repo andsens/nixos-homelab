@@ -7,7 +7,7 @@
   ...
 }:
 {
-  options.homeServer.services.rtorrent = {
+  options.homelab.services.rtorrent = {
     enable = lib.mkEnableOption "rtorrent";
     downloadPath = lib.mkOption {
       description = "Download directory";
@@ -16,9 +16,9 @@
   };
   config =
     let
-      ccfg = config.homeServer.cluster;
+      ccfg = config.homelab.cluster;
       flakePkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
-      cfg = config.homeServer.services.rtorrent;
+      cfg = config.homelab.services.rtorrent;
       kubelib = inputs.kube-generators.lib { inherit pkgs; };
       bittorrentPort = 6881;
       dhtPort = 6881;
@@ -98,7 +98,7 @@
             "app.kubernetes.io/name" = "rtorrent";
             "cluster.local/internet-egress" = "allow";
           }
-          // lib.optionalAttrs (config.homeServer.privacyVPN.enable) {
+          // lib.optionalAttrs (config.homelab.privacyVPN.enable) {
             "cluster.local/egress-gateway" = "privacy-vpn";
           };
           template.servicePodSpec = {
@@ -159,11 +159,9 @@
                     protocol = "TCP";
                     containerPort = bittorrentPort;
                   }
-                  // (lib.optionalAttrs config.homeServer.privacyVPN.enable {
+                  // (lib.optionalAttrs config.homelab.privacyVPN.enable {
                     hostPort = bittorrentPort;
-                    hostIP =
-                      lib.maybeAttr "clientIP4" config.homeServer.privacyVPN.clientIP6
-                        config.homeServer.privacyVPN;
+                    hostIP = lib.maybeAttr "clientIP4" config.homelab.privacyVPN.clientIP6 config.homelab.privacyVPN;
                   })
                 )
                 (
@@ -172,11 +170,9 @@
                     protocol = "UDP";
                     containerPort = dhtPort;
                   }
-                  // (lib.optionalAttrs config.homeServer.privacyVPN.enable {
+                  // (lib.optionalAttrs config.homelab.privacyVPN.enable {
                     hostPort = dhtPort;
-                    hostIP =
-                      lib.maybeAttr "clientIP4" config.homeServer.privacyVPN.clientIP6
-                        config.homeServer.privacyVPN;
+                    hostIP = lib.maybeAttr "clientIP4" config.homelab.privacyVPN.clientIP6 config.homelab.privacyVPN;
                   })
                 )
               ];
@@ -249,7 +245,7 @@
       networking.firewall.allowedTCPPorts = [ bittorrentPort ];
       services.k3s.images = [ image ];
       kubetree.resources.rtorrent-deployment.deployment = deployment;
-      services.k3s.manifests.rtorrent-deployment.enable = !config.homeServer.privacyVPN.enable;
+      services.k3s.manifests.rtorrent-deployment.enable = !config.homelab.privacyVPN.enable;
       kubetree.resources.rtorrent = {
         world-to-rtorrent = {
           apiVersion = "cilium.io/v2";
@@ -294,7 +290,7 @@
         };
       };
 
-      systemd.timers."portmap-rtorrent" = lib.mkIf (config.homeServer.privacyVPN.enable) {
+      systemd.timers."portmap-rtorrent" = lib.mkIf (config.homelab.privacyVPN.enable) {
         description = "Request the privacy VPN server to forward a port for rtorrent";
         wantedBy = [ "timers.target" ];
         timerConfig = {
@@ -303,7 +299,7 @@
         };
       };
 
-      systemd.services."portmap-rtorrent" = lib.mkIf (config.homeServer.privacyVPN.enable) {
+      systemd.services."portmap-rtorrent" = lib.mkIf (config.homelab.privacyVPN.enable) {
         description = "Request the privacy VPN server to forward a port for rtorrent and setup the rtorrent deployment";
         after = [
           "k3s.service"
@@ -313,7 +309,7 @@
         wantedBy = [ "default.target" ];
         script = ''
           natpmpcmd() { ${lib.getExe pkgs.libnatpmp} -g ${
-            lib.maybeAttr "gatewayIP4" config.homeServer.privacyVPN.gatewayIP6 config.homeServer.privacyVPN
+            lib.maybeAttr "gatewayIP4" config.homelab.privacyVPN.gatewayIP6 config.homelab.privacyVPN
           } "$@" | tee >(cat >&2); }
           external_ip=$(natpmpcmd | grep 'Public IP address : ' | cut -d ' ' -f5)
           bittorrent_port=$(natpmpcmd -a 0 ${builtins.toString bittorrentPort} tcp | grep 'Mapped public port' | cut -d ' ' -f4)

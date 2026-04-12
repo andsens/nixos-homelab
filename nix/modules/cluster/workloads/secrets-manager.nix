@@ -6,8 +6,8 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.cluster.secretsManager;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.cluster.secretsManager;
   flakePkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
   importSecrets = pkgs.writeShellScriptBin "import-secrets.sh" ''
     set -eo pipefail
@@ -53,7 +53,7 @@ let
   '';
 in
 {
-  options.homeServer.cluster.secretsManager = {
+  options.homelab.cluster.secretsManager = {
     allowEgress = lib.mkOption {
       description = "Services the secret manager should be able to access";
       type = lib.types.listOf lib.types.str;

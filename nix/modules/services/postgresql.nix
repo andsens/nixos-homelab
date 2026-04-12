@@ -4,12 +4,12 @@
   ...
 }:
 let
-  ccfg = config.homeServer.cluster;
-  cfg = config.homeServer.services.postgresql;
+  ccfg = config.homelab.cluster;
+  cfg = config.homelab.services.postgresql;
   dbBackups = lib.filterAttrs (serviceName: spec: spec.backup.enable) cfg.databases;
 in
 {
-  options.homeServer.services.postgresql = {
+  options.homelab.services.postgresql = {
     enable = lib.mkEnableOption "PostgreSQL";
     databases = lib.mkOption {
       description = "Databases to create and backup, indexed by serviceName";
@@ -47,8 +47,8 @@ in
                 destination = lib.mkOption {
                   description = "Destination of the database dump";
                   type = lib.types.nullOr lib.types.str;
-                  defaultText = builtins.literalExpression "\${config.homeServer.cluster.dataPath}/<serviceName>/<dbName>.pgdump";
-                  default = "${config.homeServer.cluster.dataPath}/${name}/${module.config.dbName}.pgdump";
+                  defaultText = builtins.literalExpression "\${config.homelab.cluster.dataPath}/<serviceName>/<dbName>.pgdump";
+                  default = "${config.homelab.cluster.dataPath}/${name}/${module.config.dbName}.pgdump";
                 };
                 schedule = lib.mkOption {
                   description = "Cronjob notation of when the database should be dumped";
@@ -174,7 +174,7 @@ in
                 restartPolicy = "OnFailure";
                 chownVolumes = [ "data" ];
                 mainContainer = {
-                  image = config.homeServer.services.postgresql.image;
+                  image = config.homelab.services.postgresql.image;
                   command = [ "pg_dump" ];
                   args = [
                     "--username=postgres"
