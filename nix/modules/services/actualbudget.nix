@@ -1,0 +1,59 @@
+{
+  lib,
+  config,
+  ...
+}:
+let
+  ccfg = config.homeServer.cluster;
+  cfg = config.homeServer.services.actualbudget;
+in
+{
+  options.homeServer.services.actualbudget = {
+    enable = lib.mkEnableOption "Actual Budget";
+  };
+  imports = [
+    ./actual-flow.nix
+  ];
+  config = lib.mkIf cfg.enable {
+    services.restic.backups.default.paths = [
+      "${ccfg.dataPath}/actualbudget"
+    ];
+    kubetree.resources.actualbudget = {
+      service-macro = {
+        apiVersion = "cluster.local";
+        kind = "ServiceMacro";
+        metadata.name = "actualbudget";
+        spec = {
+          allowEgress = [ "internet" ];
+          allowIngress = [ "gateway" ];
+          podSpec.addDataMount = true;
+          podSpec.mainContainer = {
+            image = "actualbudget/actual-server:sha-25d0729-alpine";
+            envByName.ACTUAL_LOGIN_METHOD = "header";
+            envByName.ACTUAL_ALLOWED_LOGIN_METHODS = "header,password";
+            envByName.ACTUAL_TRUSTED_AUTH_PROXIES = "::/0,0.0.0.0/0";
+            envByName.ACTUAL_DATA_DIR = "${ccfg.dataPath}/actualbudget";
+            envByName.ACTUAL_UPLOAD_FILE_SYNC_SIZE_LIMIT_MB = "512";
+            envByName.ACTUAL_UPLOAD_SYNC_ENCRYPTED_FILE_SYNC_SIZE_LIMIT_MB = "512";
+            envByName.ACTUAL_UPLOAD_FILE_SIZE_LIMIT_MB = "512";
+            portsByName.web = 5006;
+            livenessProbe.httpGet.port = "web";
+            readinessProbe.httpGet.port = "web";
+          };
+        };
+      };
+      service-gateway = {
+        apiVersion = "cluster.local";
+        kind = "ServiceGateway";
+        metadata.name = "actualbudget";
+        spec.port = 5006;
+        spec.requestHeaderModifier.add = [
+          {
+            name = "X-ACTUAL-PASSWORD";
+            value = "actual";
+          }
+        ];
+      };
+    };
+  };
+}

@@ -1,0 +1,82 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  namespace: node-exporter
+  name: node-exporter
+  labels:
+    app.kubernetes.io/name: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: node-exporter
+  endpoints:
+  - port: metrics
+    metricRelabelings:
+    - sourceLabels: [namespace]
+      targetLabel: exporter_namespace
+    - sourceLabels: [pod]
+      targetLabel: exporter_pod
+    - sourceLabels: [container]
+      targetLabel: exporter_container
+    - sourceLabels: [instance]
+      targetLabel: instance
+      action: replace
+      regex: "^(.*):9100$"
+    - regex: "^(namespace|pod|container)$"
+      action: labeldrop
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  namespace: node-exporter
+  name: node-exporter
+  labels:
+    app.kubernetes.io/name: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: node-exporter
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: '100%'
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: node-exporter
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+      - name: node-exporter
+        image: prom/node-exporter:v1.10.2
+        args:
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        - --no-collector.mdadm
+        securityContext:
+          readOnlyRootFilesystem: true
+        livenessProbe:
+          httpGet:
+            port: metrics
+        readinessProbe:
+          httpGet:
+            port: metrics
+        ports:
+        - name: metrics
+          containerPort: 9100
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
