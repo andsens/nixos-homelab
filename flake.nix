@@ -52,7 +52,6 @@
             };
             privacy-vpn = args: { imports = [ (importApply ./nix/modules/privacy-vpn mkFlakeArgs) ]; };
             services = args: { imports = [ (importApply ./nix/modules/services mkFlakeArgs) ]; };
-            zfs = args: { imports = [ (importApply ./nix/modules/zfs mkFlakeArgs) ]; };
           };
         };
         perSystem =
