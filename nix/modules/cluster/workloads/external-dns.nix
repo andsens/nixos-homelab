@@ -50,7 +50,7 @@ in
       external-dns-static.source = ./external-dns.yaml;
     };
     kubetree.resources = {
-      external-dns-deployment.content = {
+      external-dns.deployment = {
         apiVersion = "cluster.local";
         kind = "ServiceDeployment";
         metadata.name = "external-dns";
