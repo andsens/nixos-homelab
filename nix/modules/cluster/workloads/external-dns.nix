@@ -7,19 +7,18 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  external-dns = pkgs.buildGo125Module rec {
+  external-dns = pkgs.buildGo126Module rec {
     name = "external-dns";
-    version = "v0.20.0";
+    version = "v0.21.0";
     meta.mainProgram = "external-dns";
     src = pkgs.fetchFromGitHub {
       owner = "kubernetes-sigs";
       repo = name;
-      tag = "v0.20.0";
-      hash = "sha256-hKmUpRKrefu0nseBc7BKjpvUHVvfLcAnod0kHwW2X14=";
+      tag = version;
+      hash = "sha256-oqEMIfq7wh3tPjO6ZZ9gwgEE6TwSWaP3GiUwhybo2B4=";
     };
-    patches = [ ./external-dns-support-txt-records.patch ];
     proxyVendor = true;
-    vendorHash = "sha256-RpbiLUwea+xyCiFU2B3ypQlQH1PLCumOWhoYl7KrM08=";
+    vendorHash = "sha256-YFRYlo0WEfLG+A+bnQWUdFiJwclmLh9c8jCTKjDmPK8=";
 
     doCheck = false; # Tests require kubebuilder running through `make test`
   };
@@ -80,7 +79,6 @@ in
                   A
                   AAAA
                   CNAME
-                  TXT
                   MX
                 '';
                 EXTERNAL_DNS_EVENTS_EMIT = ''

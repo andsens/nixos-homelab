@@ -1,0 +1,172 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cert-manager:webhook-libdns
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+rules:
+- apiGroups: [cluster.local]
+  resources: [libdns]
+  verbs: [get, list, watch, update, create, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager:webhook-libdns
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager:webhook-libdns
+subjects:
+- kind: ServiceAccount
+  name: cert-manager
+  namespace: cert-manager
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  namespace: cert-manager
+  name: cert-manager-webhook-libdns-ca
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+spec:
+  secretName: cert-manager-webhook-libdns-ca
+  commonName: ca.cert-manager-webhook-libdns.cert-manager
+  duration: 87600h
+  isCA: true
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: selfsigned
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  namespace: cert-manager
+  name: cert-manager-webhook-libdns
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+spec:
+  ca:
+    secretName: cert-manager-webhook-libdns-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  namespace: cert-manager
+  name: cert-manager-webhook-libdns
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+spec:
+  secretName: cert-manager-webhook-libdns-tls
+  duration: 87600h
+  issuerRef:
+    name: cert-manager-webhook-libdns
+  dnsNames:
+  - cert-manager-webhook-libdns
+  - cert-manager-webhook-libdns.cert-manager
+  - cert-manager-webhook-libdns.cert-manager.svc
+  - cert-manager-webhook-libdns.cert-manager.svc.cluster.local
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: cert-manager
+  name: cert-manager-webhook-libdns
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cert-manager-webhook-libdns:webhook-authentication-reader
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager-webhook-libdns
+    namespace: cert-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-webhook-libdns:auth-delegator
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: cert-manager-webhook-libdns
+  namespace: cert-manager
+---
+# Grant cert-manager permission to create challenges via the webhook
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cert-manager-webhook-libdns:domain-solver
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+rules:
+- apiGroups: [cluster.local]
+  resources: ['*']
+  verbs: ['create']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-webhook-libdns:domain-solver
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-webhook-libdns:domain-solver
+subjects:
+- kind: ServiceAccount
+  name: cert-manager-webhook-libdns
+  namespace: cert-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: cert-manager
+  name: cert-manager-webhook-libdns:secret-reader
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cert-manager-webhook-libdns:secret-reader
+subjects:
+- kind: ServiceAccount
+  name: cert-manager-webhook-libdns
+  namespace: cert-manager
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha1.cluster.local
+  labels:
+    app.kubernetes.io/name: cert-manager-webhook-libdns
+  annotations:
+    cert-manager.io/inject-ca-from: cert-manager/cert-manager-webhook-libdns
+spec:
+  group: cluster.local
+  groupPriorityMinimum: 1000
+  versionPriority: 15
+  service:
+    name: cert-manager-webhook-libdns
+    namespace: cert-manager
+  version: v1alpha1
