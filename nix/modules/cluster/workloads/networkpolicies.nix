@@ -224,18 +224,18 @@
           }
         ];
       };
-      local-lan-to-pod = {
-        apiVersion = "cilium.io/v2";
-        kind = "CiliumClusterwideNetworkPolicy";
-        metadata.name = "cluster";
-        spec.endpointSelector.matchLabels."cluster.local/cluster-egress" = "allow";
-        spec.egress = [ { toEntities = [ "cluster" ]; } ];
-      };
       pod-from-local-lan = {
         apiVersion = "cilium.io/v2";
         kind = "CiliumClusterwideNetworkPolicy";
         metadata.name = "pod-from-local-lan";
         spec.endpointSelector.matchLabels."cluster.local/local-lan-ingress" = "allow";
+        spec.ingress = [ { fromCIDRSet = [ { cidrGroupRef = "local-lan"; } ]; } ];
+      };
+      pod-to-local-lan = {
+        apiVersion = "cilium.io/v2";
+        kind = "CiliumClusterwideNetworkPolicy";
+        metadata.name = "pod-to-local-lan";
+        spec.endpointSelector.matchLabels."cluster.local/local-lan-egress" = "allow";
         spec.ingress = [ { fromCIDRSet = [ { cidrGroupRef = "local-lan"; } ]; } ];
       };
     };
