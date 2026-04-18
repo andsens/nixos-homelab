@@ -112,6 +112,7 @@ in
     ./workloads/cilium.nix
     ./workloads/external-dns.nix
     ./workloads/k8sss.nix
+    ./workloads/longhorn.nix
     ./workloads/netutils.nix
     ./workloads/networkpolicies.nix
     ./workloads/secrets-manager.nix
