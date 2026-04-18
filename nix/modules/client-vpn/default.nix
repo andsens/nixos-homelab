@@ -131,7 +131,7 @@ in
         spec.blocks =
           (lib.optional ccfg.enableIPv4 { cidr = cfg.lbCidr4; })
           ++ (lib.optional ccfg.enableIPv6 { cidr = cfg.lbCidr6; });
-        spec.selector.matchLabels."app.kubernetes.io/name" = "client-vpn";
+        spec.serviceSelector.matchLabels."app.kubernetes.io/name" = "client-vpn";
       };
       config = {
         apiVersion = "v1";
