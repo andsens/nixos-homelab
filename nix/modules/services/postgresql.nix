@@ -5,13 +5,16 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.services.postgresql;
   dbBackups = lib.filterAttrs (serviceName: spec: spec.backup.enable) cfg.databases;
 in
 {
   options.homelab.services.postgresql = {
     enable = lib.mkEnableOption "PostgreSQL";
+    dumpsVolume = lib.mkOption {
+      description = "Volume source (as specificed on the pod spec) to place database dumps in";
+      type = lib.types.attrsOf lib.types.anything;
+    };
     databases = lib.mkOption {
       description = "Databases to create and backup, indexed by serviceName";
       type = lib.types.attrsOf (
@@ -45,12 +48,6 @@ in
               };
               backup = {
                 enable = lib.mkEnableOption "backup of the database";
-                destination = lib.mkOption {
-                  description = "Destination of the database dump";
-                  type = lib.types.nullOr lib.types.str;
-                  defaultText = builtins.literalExpression "\${config.homelab.cluster.dataPath}/<serviceName>/<dbName>.pgdump";
-                  default = "${config.homelab.cluster.dataPath}/${name}/${module.config.dbName}.pgdump";
-                };
                 schedule = lib.mkOption {
                   description = "Cronjob notation of when the database should be dumped";
                   type = lib.types.nullOr lib.types.str;
@@ -70,9 +67,9 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    services.restic.backups.default.paths = (
-      lib.mapAttrsToList (serviceName: spec: spec.backup.destination) dbBackups
-    );
+    # services.restic.backups.default.paths = (
+    #   lib.mapAttrsToList (serviceName: spec: "spec.backup.destination") dbBackups
+    # );
 
     kubetree.resources.postgresql = {
       service-macro = {
@@ -80,12 +77,10 @@ in
         kind = "ServiceMacro";
         metadata.name = "postgresql";
         spec = {
-          podSpec = {
-            chownVolumes = [ "run" ];
-            addDataMount = true;
+          dataPath = "/var/lib/postgresql";
+          servicePodSpec = {
             mainContainer = {
               image = cfg.image;
-              envByName.PGDATA = "${ccfg.dataPath}/postgresql";
               envByName.POSTGRES_PASSWORD = "postgres";
               portsByName.postgresql = 5432;
               volumeMountsByPath = {
@@ -173,7 +168,6 @@ in
               servicePodSpec = {
                 name = jobName;
                 restartPolicy = "OnFailure";
-                chownVolumes = [ "data" ];
                 mainContainer = {
                   image = config.homelab.services.postgresql.image;
                   command = [ "pg_dump" ];
@@ -183,18 +177,16 @@ in
                     "--blobs"
                     "--quote-all-identifiers"
                     "--format=custom"
-                    "--file=${spec.backup.destination}"
+                    "--file=/dumps/${spec.dbName}.pgdump"
                   ];
                   envByName = {
                     PGHOST = "postgresql.postgresql";
                     PGUSER = "postgres";
                     PGPASSWORD = "postgres";
                   };
-                  hostMounts."${builtins.dirOf spec.backup.destination}" = {
-                    name = "data";
-                    type = "DirectoryOrCreate";
-                  };
+                  volumeMountsByPath."/dumps" = "data";
                 };
+                volumesByName.data = cfg.dumpsVolume;
               };
             };
           };

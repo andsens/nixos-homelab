@@ -22,10 +22,6 @@ in
       description = "The ACME provider that Ingresses should use for obtaining TLS certs";
       type = lib.types.str;
     };
-    dataPath = lib.mkOption {
-      description = "Path for services whose data should persist across cluster iterations (hostPath mount)";
-      type = lib.types.str;
-    };
     defaultUser.uid = lib.mkOption {
       description = "Default user UID for pods";
       type = lib.types.int;
@@ -35,10 +31,6 @@ in
       description = "Default group GID for pods";
       type = lib.types.int;
       default = 1000;
-    };
-    utilityImage = lib.mkOption {
-      description = "Tag of a utility image that can be used for ancillary tasks such as chowning new volumes";
-      type = lib.types.str;
     };
   };
   config = {

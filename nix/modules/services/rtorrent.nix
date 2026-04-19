@@ -8,9 +8,13 @@
 {
   options.homelab.services.rtorrent = {
     enable = lib.mkEnableOption "rtorrent";
-    downloadPath = lib.mkOption {
-      description = "Download directory";
-      type = lib.types.path;
+    dataVolume = lib.mkOption {
+      description = "Volume source (as specificed on the pod spec) to store rtorrent data in";
+      type = lib.types.attrsOf lib.types.anything;
+    };
+    downloadsVolume = lib.mkOption {
+      description = "Volume source (as specificed on the pod spec) to place downloads in";
+      type = lib.types.attrsOf lib.types.anything;
     };
   };
   config =
@@ -76,7 +80,7 @@
           ${pkgs.dockerTools.shadowSetup}
           groupadd -r -g 100 users
           groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-          useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d ${ccfg.dataPath}/rtorrent rtorrent
+          useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d /data rtorrent
         '';
         config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
         config.Entrypoint = [
@@ -102,17 +106,16 @@
           };
           template.servicePodSpec = {
             name = "rtorrent";
-            chownVolumes = [ "bt-downloads" ];
-            addDataMount = true;
             terminationGracePeriodSeconds = 10;
+            securityContext.fsGroup = config.kubetree.service-macros.defaultUser.gid;
             initContainersByName.rm-locks = {
               image = "${flakePkgs.container-utils.buildArgs.name}:${flakePkgs.container-utils.imageTag}";
               imagePullPolicy = "Never";
               args = [
-                ''rm -f "${ccfg.dataPath}/rtorrent/rtorrent.pid" "${ccfg.dataPath}/rtorrent/rtorrent.lock"''
+                ''rm -f "/data/rtorrent.pid" "/data/rtorrent.lock"''
               ];
               securityContext.readOnlyRootFilesystem = true;
-              volumeMountsByPath."${ccfg.dataPath}/rtorrent" = "data";
+              volumeMountsByPath."/data" = "data";
             };
             mainContainer = {
               image = "${image.buildArgs.name}:${image.imageTag}";
@@ -120,9 +123,9 @@
               args = [
                 "-n"
                 "-d"
-                cfg.downloadPath
+                "/downloads"
                 "-s"
-                "${ccfg.dataPath}/rtorrent"
+                "/data"
                 "-p"
                 "$(BITTORRENT_PORT)-$(BITTORRENT_PORT)"
                 "-o"
@@ -175,11 +178,9 @@
                   })
                 )
               ];
-              hostMounts."${cfg.downloadPath}" = {
-                name = "bt-downloads";
-                hostPath.type = "DirectoryOrCreate";
-              };
               volumeMountsByPath = {
+                "/data" = "data";
+                "/downloads" = "downloads";
                 "/etc/rtorrent.rc" = {
                   name = "config";
                   subPath = "rtorrent.rc";
@@ -189,6 +190,8 @@
               };
             };
             volumesByName = {
+              data = cfg.dataVolume;
+              downloads = cfg.downloadsVolume;
               config.configMap.name = "config";
               log.emptyDir = { };
               run.emptyDir = { };
@@ -275,6 +278,17 @@
           data."rtorrent.rc" = builtins.readFile ./rtorrent.rc;
         };
         namespace = (self.lib.k8s.createNamespace { namespace = "rtorrent"; });
+        data = {
+          apiVersion = "v1";
+          kind = "PersistentVolumeClaim";
+          metadata.namespace = "rtorrent";
+          metadata.name = "rtorrent";
+          spec = {
+            accessModes = [ "ReadWriteOnce" ];
+            resources.requests.storage = "1Gi";
+            volumeMode = "Filesystem";
+          };
+        };
         service = {
           apiVersion = "cluster.local";
           kind = "ServiceService";

@@ -248,11 +248,17 @@ in
                     name = "config-tmp";
                     subPath = "clients.conf";
                   };
+                  "/dev/net/tun" = "dev-net-tun";
                 };
-                hostMounts."/dev/net/tun".type = "CharDevice";
               };
-              volumesByName.config-tmp.emptyDir = { };
-              volumesByName.config.configMap.name = "config";
+              volumesByName = {
+                dev-net-tun.hostPath = {
+                  path = "/dev/net/tun";
+                  type = "CharDevice";
+                };
+                config-tmp.emptyDir = { };
+                config.configMap.name = "config";
+              };
             };
           };
         };

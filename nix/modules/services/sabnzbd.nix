@@ -25,7 +25,7 @@ let
       ${pkgs.dockerTools.shadowSetup}
       groupadd -r -g 100 users
       groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d "${ccfg.dataPath}/sabnzbd" sabnzbd
+      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d "/data" sabnzbd
     '';
     config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
     config.Entrypoint = [
@@ -36,14 +36,9 @@ in
 {
   options.homelab.services.sabnzbd = {
     enable = lib.mkEnableOption "sabnzbd";
-    downloadPath = lib.mkOption {
-      description = "Download directory";
-      type = lib.types.path;
-    };
-    mountPaths = lib.mkOption {
-      description = "Paths from the host to mirror into the container";
-      type = lib.types.listOf lib.types.path;
-      default = [ ];
+    downloadsVolume = lib.mkOption {
+      description = "Volume source (as specificed on the pod spec) to place downloads in";
+      type = lib.types.attrsOf lib.types.anything;
     };
   };
   config = lib.mkIf cfg.enable {
@@ -59,7 +54,7 @@ in
       };
     };
     homelab.cluster.secretsManager.importSecrets.sabnzbd-api-key = {
-      extractCommands.SABNZBD_API_KEY = ''grep '^api_key = ' "${ccfg.dataPath}/sabnzbd/sabnzbd.ini" | cut -d ' ' -f3'';
+      extractCommands.SABNZBD_API_KEY = ''grep '^api_key = ' "/data/sabnzbd.ini" | cut -d ' ' -f3'';
       destinations = [ "homepage" ];
     };
     homelab.services.homepage.envByName.HOMEPAGE_VAR_SABNZBD_API_KEY.valueFrom.secretKeyRef = {
@@ -67,9 +62,20 @@ in
       key = "SABNZBD_API_KEY";
     };
     homelab.services.homepage.allowEgress = [ "sabnzbd" ];
-    services.restic.backups.default.paths = [ "${ccfg.dataPath}/sabnzbd/backups" ];
+    services.restic.backups.default.paths = [ "/data/backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.sabnzbd = {
+      data = {
+        apiVersion = "v1";
+        kind = "PersistentVolumeClaim";
+        metadata.namespace = "sabnzbd";
+        metadata.name = "sabnzbd";
+        spec = {
+          accessModes = [ "ReadWriteOnce" ];
+          resources.requests.storage = "1Gi";
+          volumeMode = "Filesystem";
+        };
+      };
       deployment = {
         apiVersion = "cluster.local";
         kind = "ServiceDeployment";
@@ -82,26 +88,26 @@ in
           };
           template.servicePodSpec = {
             name = "sabnzbd";
-            addDataMount = true;
+            securityContext.fsGroup = config.kubetree.service-macros.defaultUser.gid;
             initContainersByName.setup-config = {
               image = "${flakePkgs.container-utils.buildArgs.name}:${flakePkgs.container-utils.imageTag}";
               imagePullPolicy = "Never";
               args = [
                 ''
-                  [[ -f "${ccfg.dataPath}/sabnzbd/sabnzbd.ini" ]] || cat >"${ccfg.dataPath}/sabnzbd/sabnzbd.ini" <<'EOF'
+                  [[ -f "/data/sabnzbd.ini" ]] || cat >"/data/sabnzbd.ini" <<'EOF'
                   [misc]
                   host = 0.0.0.0
                   port = 8080
                   host_whitelist = sabnzbd.${ccfg.domain},sabnzbd.sabnzbd,
-                  download_dir = ${cfg.downloadPath}/incomplete
-                  complete_dir = ${cfg.downloadPath}/complete
+                  download_dir = /downloads/incomplete
+                  complete_dir = /downloads/complete
                   schedlines = "1 0 21 7 create_backup ",
-                  backup_dir = "${ccfg.dataPath}/sabnzbd/backups"
+                  backup_dir = "/data/backups"
                   EOF
                 ''
               ];
               securityContext.readOnlyRootFilesystem = true;
-              volumeMountsByPath."${ccfg.dataPath}/sabnzbd" = "data";
+              volumeMountsByPath."/data" = "data";
             };
             mainContainer = {
               image = "${image.buildArgs.name}:${image.imageTag}";
@@ -110,18 +116,22 @@ in
                 "--disable-file-log"
                 "--console"
                 "--config-file"
-                "${ccfg.dataPath}/sabnzbd/sabnzbd.ini"
+                "/data/sabnzbd.ini"
               ];
               portsByName.web = 8080;
               livenessProbe.httpGet.port = "web";
               readinessProbe.httpGet.port = "web";
-              hostMounts."${cfg.downloadPath}" = {
-                name = "nzb-downloads";
-                hostPath.type = "DirectoryOrCreate";
+              volumeMountsByPath = {
+                "/data" = "data";
+                "/downloads" = "downloads";
+                "/tmp" = "tmp";
               };
-              volumeMountsByPath."/tmp" = "tmp";
             };
-            volumesByName.tmp.emptyDir = { };
+            volumesByName = {
+              data.persistentVolumeClaim.claimName = "sabnzbd";
+              downloads = cfg.downloadsVolume;
+              tmp.emptyDir = { };
+            };
           };
         };
       };

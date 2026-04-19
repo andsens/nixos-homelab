@@ -114,6 +114,7 @@ in
     ./workloads/k8sss.nix
     ./workloads/netutils.nix
     ./workloads/networkpolicies.nix
+    ./workloads/nfs-provisioner.nix
     ./workloads/secrets-manager.nix
   ];
   config = lib.mkIf ccfg.enable {
@@ -126,7 +127,6 @@ in
         inherit (ccfg)
           domain
           acmeProvider
-          dataPath
           defaultUser
           ;
         utilityImage = "${flakePkgs.container-utils.buildArgs.name}:${flakePkgs.container-utils.imageTag}";

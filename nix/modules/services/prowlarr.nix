@@ -24,7 +24,7 @@ let
       ${pkgs.dockerTools.shadowSetup}
       groupadd -r -g 100 users
       groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d "${ccfg.dataPath}/prowlarr" prowlarr
+      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d /data prowlarr
     '';
     config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
     config.Entrypoint = [
@@ -57,7 +57,7 @@ in
       key = "PROWLARR_API_KEY";
     };
     homelab.services.homepage.allowEgress = [ "prowlarr" ];
-    services.restic.backups.default.paths = [ "${ccfg.dataPath}/prowlarr/Backups" ];
+    # services.restic.backups.default.paths = [ "${ccfg.dataPath}/prowlarr/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.prowlarr.content = {
       apiVersion = "cluster.local";
@@ -72,12 +72,12 @@ in
           "sabnzbd"
         ];
         ingressPort = 9696;
-        podSpec = {
-          addDataMount = true;
+        dataPath = "/data";
+        servicePodSpec = {
           mainContainer = {
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
-            args = [ "-data=${ccfg.dataPath}/prowlarr" ];
+            args = [ "-data=/data" ];
             envByName.PROWLARR__AUTH__ENABLED = "false";
             envByName.PROWLARR__AUTH__METHOD = "External";
             envByName.PROWLARR__APP__LAUNCHBROWSER = "false";

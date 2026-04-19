@@ -5,7 +5,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.services.actualbudget;
 in
 {
@@ -13,9 +12,9 @@ in
     enable = lib.mkEnableOption "Actual Budget";
   };
   config = lib.mkIf cfg.enable {
-    services.restic.backups.default.paths = [
-      "${ccfg.dataPath}/actualbudget"
-    ];
+    # services.restic.backups.default.paths = [
+    #   "${ccfg.dataPath}/actualbudget"
+    # ];
     kubetree.resources.actualbudget = {
       service-macro = {
         apiVersion = "cluster.local";
@@ -24,13 +23,13 @@ in
         spec = {
           allowEgress = [ "internet" ];
           allowIngress = [ "gateway" ];
-          podSpec.addDataMount = true;
-          podSpec.mainContainer = {
+          dataPath = "/data";
+          servicePodSpec.mainContainer = {
             image = "actualbudget/actual-server:sha-25d0729-alpine";
             envByName.ACTUAL_LOGIN_METHOD = "header";
             envByName.ACTUAL_ALLOWED_LOGIN_METHODS = "header,password";
             envByName.ACTUAL_TRUSTED_AUTH_PROXIES = "::/0,0.0.0.0/0";
-            envByName.ACTUAL_DATA_DIR = "${ccfg.dataPath}/actualbudget";
+            envByName.ACTUAL_DATA_DIR = "/data";
             envByName.ACTUAL_UPLOAD_FILE_SYNC_SIZE_LIMIT_MB = "512";
             envByName.ACTUAL_UPLOAD_SYNC_ENCRYPTED_FILE_SYNC_SIZE_LIMIT_MB = "512";
             envByName.ACTUAL_UPLOAD_FILE_SIZE_LIMIT_MB = "512";

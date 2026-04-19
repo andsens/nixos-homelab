@@ -6,7 +6,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.services.alloy;
 in
 {
@@ -38,6 +37,17 @@ in
           };
           data."alloy-config.alloy" = builtins.readFile ./alloy-config.alloy;
         };
+        data = {
+          apiVersion = "v1";
+          kind = "PersistentVolumeClaim";
+          metadata.namespace = "alloy";
+          metadata.name = "alloy";
+          spec = {
+            accessModes = [ "ReadWriteOnce" ];
+            resources.requests.storage = "1Gi";
+            volumeMode = "Filesystem";
+          };
+        };
         daemonset = {
           apiVersion = "apps/v1";
           kind = "DaemonSet";
@@ -61,13 +71,13 @@ in
             };
             template.servicePodSpec = {
               name = "alloy";
-              addDataMount = true;
+              securityContext.fsGroup = config.kubetree.service-macros.defaultUser.gid;
               mainContainer = {
                 image = "docker.io/grafana/alloy:v1.11.3";
                 args = [
                   "run"
                   "/etc/alloy/alloy-config.alloy"
-                  "--storage.path=${ccfg.dataPath}/alloy"
+                  "--storage.path=/data"
                   "--server.http.listen-addr=0.0.0.0:3000"
                 ];
                 envByName.HOSTNAME.valueFrom.fieldRef.fieldPath = "spec.nodeName";
@@ -82,6 +92,7 @@ in
                   timeoutSeconds = 1;
                 };
                 volumeMountsByPath."/etc/alloy" = "config";
+                volumeMountsByPath."/data" = "data";
               };
               containersByName.config-reloader = {
                 image = "quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0";
@@ -92,6 +103,7 @@ in
                 volumeMountsByPath."/etc/alloy" = "config";
               };
               volumesByName.config.configMap.name = "config";
+              volumesByName.data.persistentVolumeClaim.claimName = "alloy";
             };
           };
         };

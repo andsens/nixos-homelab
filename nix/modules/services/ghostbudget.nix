@@ -139,6 +139,17 @@ in
               ) cfg.actualBudgetSyncMap;
             };
           };
+          volume = {
+            apiVersion = "v1";
+            kind = "PersistentVolumeClaim";
+            metadata.namespace = "ghostfolio";
+            metadata.name = "ghostbudget";
+            spec = {
+              accessModes = [ "ReadWriteOnce" ];
+              resources.requests.storage = "1Gi";
+              volumeMode = "Filesystem";
+            };
+          };
           sync-accounts = {
             apiVersion = "batch/v1";
             kind = "CronJob";
@@ -155,7 +166,7 @@ in
               servicePodSpec = {
                 name = "ghostbudget";
                 restartPolicy = "OnFailure";
-                addDataMount = true;
+                securityContext.fsGroup = config.kubetree.service-macros.defaultUser.gid;
                 mainContainer = {
                   image = "${ghostbudgetImage.buildArgs.name}:${ghostbudgetImage.imageTag}";
                   imagePullPolicy = "Never";
@@ -164,7 +175,7 @@ in
                   envByName.ACTUAL_BUDGET_PASS = "actual";
                   envByName.ACTUAL_BUDGET_SYNC_ID = cfg.actualBudgetSyncId;
                   # Not the actual Actual Budget data dir, this is just for the api library
-                  envByName.ACTUAL_BUDGET_DATA_DIR = "${ccfg.dataPath}/ghostbudget";
+                  envByName.ACTUAL_BUDGET_DATA_DIR = "/data";
                   envByName.GHOSTFOLIO_URL = "http://ghostfolio.ghostfolio:3333";
                   envByName.GHOSTFOLIO_TOKEN.valueFrom.secretKeyRef = {
                     name = "ghostfolio-token";
@@ -175,11 +186,12 @@ in
                       name = "config";
                       subPath = "config.json";
                     };
-                    "${ccfg.dataPath}/ghostbudget" = "data";
+                    "/data" = "data";
                     "/logs" = "log";
                   };
                 };
                 volumesByName.config.configMap.name = "ghostbudget";
+                volumesByName.data.persistentVolumeClaim.claimName = "alloy";
                 volumesByName.log.emptyDir = { };
               };
             };

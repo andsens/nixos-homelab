@@ -91,7 +91,11 @@ in
               portsByName.metrics = 9134;
               livenessProbe.httpGet.port = "metrics";
               readinessProbe.httpGet.port = "metrics";
-              hostMounts."/dev" = "dev";
+              volumeMountsByPath."/dev" = "dev";
+            };
+            volumesByName.dev.hostPath = {
+              path = "/dev";
+              type = "Directory";
             };
           };
         };

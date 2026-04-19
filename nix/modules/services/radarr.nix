@@ -1,4 +1,4 @@
-{ ... }:
+{ self, ... }:
 {
   pkgs,
   lib,
@@ -24,7 +24,7 @@ let
       ${pkgs.dockerTools.shadowSetup}
       groupadd -r -g 100 users
       groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d "${ccfg.dataPath}/radarr" radarr
+      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d /data radarr
     '';
     config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
     config.Entrypoint = [
@@ -35,10 +35,10 @@ in
 {
   options.homelab.services.radarr = {
     enable = lib.mkEnableOption "radarr";
-    mountPaths = lib.mkOption {
-      description = "Paths from the host to mirror into the container";
-      type = lib.types.listOf lib.types.path;
-      default = [ ];
+    volumes = lib.mkOption {
+      description = "Volumes to mount into the container expressed as a map of mountpath to volume source (as specificed on the pod spec).";
+      type = lib.types.attrsOf lib.types.anything;
+      default = { };
     };
   };
   config = lib.mkIf cfg.enable {
@@ -62,7 +62,7 @@ in
       key = "RADARR_API_KEY";
     };
     homelab.services.homepage.allowEgress = [ "radarr" ];
-    services.restic.backups.default.paths = [ "${ccfg.dataPath}/radarr/Backups" ];
+    # services.restic.backups.default.paths = [ "${ccfg.dataPath}/radarr/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.radarr.content = {
       apiVersion = "cluster.local";
@@ -77,13 +77,13 @@ in
           "sabnzbd"
         ];
         ingressPort = 7878;
-        podSpec = {
-          addDataMount = true;
+        dataPath = "/data";
+        servicePodSpec = {
           mainContainer = {
             image = "${image.buildArgs.name}:${image.imageTag}";
             addCapabilities = [ "CHOWN" ];
             imagePullPolicy = "Never";
-            args = [ "-data=${ccfg.dataPath}/radarr" ];
+            args = [ "-data=/data" ];
             envByName.RADARR__AUTH__ENABLED = "false";
             envByName.RADARR__AUTH__METHOD = "External";
             envByName.RADARR__APP__LAUNCHBROWSER = "false";
@@ -97,17 +97,17 @@ in
               port = "web";
               path = "/ping";
             };
-            hostMounts =
-              (lib.mergeAttrsList (map (path: { "${path}" = { }; }) cfg.mountPaths))
-              // (lib.optionalAttrs config.homelab.services.rtorrent.enable {
-                "${config.homelab.services.rtorrent.downloadPath}".name = "bt-downloads";
-              })
-              // (lib.optionalAttrs config.homelab.services.sabnzbd.enable {
-                "${config.homelab.services.sabnzbd.downloadPath}".name = "nzb-downloads";
-              });
-            volumeMountsByPath."/tmp" = "tmp";
+            volumeMountsByPath = {
+              "/tmp" = "tmp";
+            }
+            // lib.mapAttrs' (key: value: lib.nameValuePair key (self.lib.k8s.pathToMountName key)) cfg.volumes;
           };
-          volumesByName.tmp.emptyDir = { };
+          volumesByName = {
+            tmp.emptyDir = { };
+          }
+          // lib.mapAttrs' (
+            key: value: lib.nameValuePair (self.lib.k8s.pathToMountName key) value
+          ) cfg.volumes;
         };
       };
     };

@@ -105,8 +105,9 @@ in
               portsByName.metrics = 9633;
               livenessProbe.httpGet.port = "metrics";
               readinessProbe.httpGet.port = "metrics";
-              hostMounts."/dev" = "dev";
+              volumeMountsByPath."/dev" = "dev";
             };
+            volumesByName.dev.hostPath.path = "/dev";
           };
         };
       };

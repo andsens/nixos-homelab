@@ -1,4 +1,4 @@
-{ ... }:
+{ self, ... }:
 {
   pkgs,
   lib,
@@ -24,7 +24,7 @@ let
       ${pkgs.dockerTools.shadowSetup}
       groupadd -r -g 100 users
       groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d "${ccfg.dataPath}/sonarr" sonarr
+      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d /data sonarr
     '';
     config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
     config.Entrypoint = [
@@ -39,6 +39,11 @@ in
       description = "Paths from the host to mirror into the container";
       type = lib.types.listOf lib.types.path;
       default = [ ];
+    };
+    volumes = lib.mkOption {
+      description = "Volumes to mount into the container expressed as a map of mountpath to volume source (as specificed on the pod spec).";
+      type = lib.types.attrsOf lib.types.anything;
+      default = { };
     };
   };
   config = lib.mkIf cfg.enable {
@@ -62,7 +67,7 @@ in
       key = "SONARR_API_KEY";
     };
     homelab.services.homepage.allowEgress = [ "sonarr" ];
-    services.restic.backups.default.paths = [ "${ccfg.dataPath}/sonarr/Backups" ];
+    # services.restic.backups.default.paths = [ "${ccfg.dataPath}/sonarr/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.sonarr.content = {
       apiVersion = "cluster.local";
@@ -77,12 +82,12 @@ in
           "sabnzbd"
         ];
         ingressPort = 8989;
-        podSpec = {
-          addDataMount = true;
+        dataPath = "/data";
+        servicePodSpec = {
           mainContainer = {
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
-            args = [ "-data=${ccfg.dataPath}/sonarr" ];
+            args = [ "-data=/data" ];
             addCapabilities = [ "CHOWN" ];
             envByName.SONARR__AUTH__ENABLED = "false";
             envByName.SONARR__AUTH__METHOD = "External";
@@ -97,17 +102,17 @@ in
               port = "web";
               path = "/ping";
             };
-            hostMounts =
-              (lib.mergeAttrsList (map (path: { "${path}" = { }; }) cfg.mountPaths))
-              // (lib.optionalAttrs config.homelab.services.rtorrent.enable {
-                "${config.homelab.services.rtorrent.downloadPath}".name = "bt-downloads";
-              })
-              // (lib.optionalAttrs config.homelab.services.sabnzbd.enable {
-                "${config.homelab.services.sabnzbd.downloadPath}".name = "nzb-downloads";
-              });
-            volumeMountsByPath."/tmp" = "tmp";
+            volumeMountsByPath = {
+              "/tmp" = "tmp";
+            }
+            // lib.mapAttrs' (key: value: lib.nameValuePair key (self.lib.k8s.pathToMountName key)) cfg.volumes;
           };
-          volumesByName.tmp.emptyDir = { };
+          volumesByName = {
+            tmp.emptyDir = { };
+          }
+          // lib.mapAttrs' (
+            key: value: lib.nameValuePair (self.lib.k8s.pathToMountName key) value
+          ) cfg.volumes;
         };
       };
     };

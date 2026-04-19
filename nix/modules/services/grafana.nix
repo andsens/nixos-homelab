@@ -79,8 +79,8 @@ in
             "postgresql"
           ];
           allowIngress = [ "gateway" ];
-          chownVolumes = [ "data" ];
-          podSpec = {
+          servicePodSpec = {
+            dataPath = "/var/lib/grafana";
             mainContainer = {
               image = cfg.image;
               portsByName.web = 3000;
@@ -101,11 +101,9 @@ in
                 "/tmp" = "tmp";
               };
             };
-            volumesByName.config.configMap.name = "config";
-            volumesByName.tmp.emptyDir = { };
-            volumesByName.data = {
-              hostPath.path = "${ccfg.dataPath}/grafana";
-              hostPath.type = "DirectoryOrCreate";
+            volumesByName = {
+              config.configMap.name = "config";
+              tmp.emptyDir = { };
             };
           };
         };

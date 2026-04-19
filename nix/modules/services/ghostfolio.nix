@@ -72,7 +72,7 @@ in
           "redis"
         ];
         ingressPort = 3333;
-        podSpec.mainContainer = {
+        servicePodSpec.mainContainer = {
           image = "ghostfolio/ghostfolio:2.228.0";
           envByName."DATABASE_URL" =
             "postgresql://ghostfolio:ghostfolio@postgresql.postgresql:5432/ghostfolio";

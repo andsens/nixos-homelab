@@ -45,10 +45,10 @@ in
       type = lib.types.listOf lib.types.str;
       default = [ ];
     };
-    mountPaths = lib.mkOption {
-      description = "Paths from the host to mirror into the container";
-      type = lib.types.listOf lib.types.path;
-      default = [ ];
+    volumes = lib.mkOption {
+      description = "Volumes to mount into the container expressed as a map of mountpath to volume source (as specificed on the pod spec).";
+      type = lib.types.attrsOf lib.types.anything;
+      default = { };
     };
   };
   config = lib.mkIf cfg.enable {
@@ -68,7 +68,7 @@ in
       };
     };
     homelab.cluster.secretsManager.importSecrets.plex-api-key = {
-      extractCommands.PLEX_API_KEY = ''xq -x '//Preferences/@PlexOnlineToken' "${ccfg.dataPath}/plex/Library/Application Support/Plex Media Server/Preferences.xml"'';
+      extractCommands.PLEX_API_KEY = ''xq -x '//Preferences/@PlexOnlineToken' "/data/Library/Application Support/Plex Media Server/Preferences.xml"'';
       destinations = [ "homepage" ];
     };
     homelab.services.homepage.envByName.HOMEPAGE_VAR_PLEX_API_KEY.valueFrom.secretKeyRef = {
@@ -77,7 +77,7 @@ in
     };
     homelab.services.homepage.allowEgress = [ "plex" ];
     services.restic.backups.default.paths = [
-      "${ccfg.dataPath}/plex/Library/Application Support/Plex Media Server"
+      "/data/Library/Application Support/Plex Media Server"
     ];
     services.k3s.images = [ image ];
     kubetree.resources.plex = {
@@ -159,32 +159,21 @@ in
         metadata.name = "plex";
         spec = {
           allowEgress = [ "internet" ];
-          podSpec = {
-            chownVolumes = [
-              "data"
-              "var-tmp"
-              "tmp"
-            ];
+          dataPath = "/var/lib/plex";
+          servicePodSpec = {
             initContainersByName.rm-lock = {
               image = "${flakePkgs.container-utils.buildArgs.name}:${flakePkgs.container-utils.imageTag}";
               imagePullPolicy = "Never";
               args = [
-                ''rm -f "${ccfg.dataPath}/plex/Library/Application Support/Plex Media Server/plexmediaserver.pid"''
+                ''rm -f "/var/lib/plex/Library/Application Support/Plex Media Server/plexmediaserver.pid"''
               ];
               securityContext.readOnlyRootFilesystem = true;
-              volumeMountsByPath."${ccfg.dataPath}/plex" = "data";
+              volumeMountsByPath."/var/lib/plex" = "data";
             };
             mainContainer = {
               image = "${image.buildArgs.name}:${image.imageTag}";
               imagePullPolicy = "Never";
               portsByName.web = 32400;
-              volumeMountsByPath = {
-                "/var/lib/plex" = "data";
-                "/tls" = "tls";
-                "/var/tmp" = "var-tmp";
-                "/tmp" = "tmp";
-              };
-              hostMounts = lib.mergeAttrsList (map (path: { "${path}".readOnly = true; }) cfg.mountPaths);
               livenessProbe.httpGet = {
                 scheme = "HTTPS";
                 port = "web";
@@ -195,16 +184,27 @@ in
                 port = "web";
                 path = "/identity";
               };
+              volumeMountsByPath = {
+                "/tls" = "tls";
+                "/var/tmp" = "var-tmp";
+                "/tmp" = "tmp";
+              }
+              // lib.mapAttrs' (
+                key: value:
+                lib.nameValuePair key {
+                  name = (self.lib.k8s.pathToMountName key);
+                  readOnly = true;
+                }
+              ) cfg.volumes;
             };
             volumesByName = {
-              data = {
-                hostPath.path = "${ccfg.dataPath}/plex";
-                hostPath.type = "DirectoryOrCreate";
-              };
               tls.secret.secretName = "plex-tls";
               var-tmp.emptyDir = { };
               tmp.emptyDir = { };
-            };
+            }
+            // lib.mapAttrs' (
+              key: value: lib.nameValuePair (self.lib.k8s.pathToMountName key) value
+            ) cfg.volumes;
           };
         };
       };

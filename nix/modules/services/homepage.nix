@@ -185,7 +185,7 @@ in
             ]
             ++ cfg.allowEgress;
             ingressPort = null;
-            podSpec.mainContainer = {
+            servicePodSpec.mainContainer = {
               image = "${image.buildArgs.name}:${image.imageTag}";
               imagePullPolicy = "Never";
               envByName = cfg.envByName // {
@@ -223,7 +223,7 @@ in
                   "/app/public/images/background.png" = "background-image";
                 };
             };
-            podSpec.volumesByName = {
+            servicePodSpec.volumesByName = {
               config.configMap.name = "config";
               logs.emptyDir = { };
               pages.emptyDir = { };

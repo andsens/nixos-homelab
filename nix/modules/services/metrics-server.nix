@@ -14,7 +14,6 @@ in
     enable = lib.mkEnableOption "metrics-server";
   };
   config = lib.mkIf cfg.enable {
-    networking.firewall.allowedTCPPorts = lib.optional config.networking.firewall.enable 10250;
     homelab.services.homepage.widgets.resources = {
       sort = lib.mkDefault 100;
       backend = "resources";

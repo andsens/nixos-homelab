@@ -38,7 +38,7 @@ in
             "compactor"
           ];
           usage_stats.enabled = false;
-          activity_tracker.filepath = "${ccfg.dataPath}/mimir/metrics-activity.log";
+          activity_tracker.filepath = "/data/metrics-activity.log";
           limits.compactor_blocks_retention_period = cfg.retention;
           distributor = {
             ring.kvstore.store = "inmemory";
@@ -52,15 +52,15 @@ in
             replication_factor = 1;
           };
           blocks_storage = {
-            tsdb.dir = "${ccfg.dataPath}/mimir/tsdb";
-            bucket_store.sync_dir = "${ccfg.dataPath}/mimir/tsdb-sync";
-            filesystem.dir = "${ccfg.dataPath}/mimir/blocks";
+            tsdb.dir = "/data/tsdb";
+            bucket_store.sync_dir = "/data/tsdb-sync";
+            filesystem.dir = "/data/blocks";
           };
-          compactor.data_dir = "${ccfg.dataPath}/mimir/compactor";
-          ruler.rule_path = "${ccfg.dataPath}/mimir/data-ruler";
+          compactor.data_dir = "/data/compactor";
+          ruler.rule_path = "/data/data-ruler";
           ruler_storage = {
             backend = "local";
-            local.directory = "${ccfg.dataPath}/mimir/rules";
+            local.directory = "/data/rules";
           };
         };
       };
@@ -70,8 +70,8 @@ in
         metadata.name = "mimir";
         spec = {
           ingressPort = 8080;
-          podSpec.addDataMount = true;
-          podSpec.mainContainer = {
+          dataPath = "/data";
+          servicePodSpec.mainContainer = {
             image = "grafana/mimir:3.0.0";
             args = [ "-config.file=/etc/mimir/mimir.yaml" ];
             portsByName.web = 8080;
@@ -93,7 +93,7 @@ in
               httpGet.port = "web";
             };
           };
-          podSpec.volumesByName.config.configMap.name = "config";
+          servicePodSpec.volumesByName.config.configMap.name = "config";
         };
       };
     };

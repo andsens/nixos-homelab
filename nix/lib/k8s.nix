@@ -1,7 +1,7 @@
 # https://github.com/arnarg/nixidy/blob/65723ff09083d27d58792a739bb56a7885215f07/lib/kustomize.nix
 { lib, ... }:
 with builtins;
-{
+rec {
   createNamespace =
     { namespace }:
     {
@@ -9,6 +9,22 @@ with builtins;
       kind = "Namespace";
       metadata.name = namespace;
     };
+  replaceInvalidCharacters =
+    validCharsRE: replaceWith: string:
+    lib.concatStrings (
+      map (c: if match validCharsRE c == null then replaceWith else c) (lib.stringToCharacters string)
+    );
+  pathToMountName =
+    path:
+    let
+      cleaned = replaceInvalidCharacters "[a-z0-9-]" "-" (
+        lib.toLower (lib.strings.removePrefix "/" path)
+      );
+    in
+    if lib.stringLength cleaned > 63 then
+      ((substring 0 54 cleaned) + "-" + (substring 0 8 (hashString "sha256" cleaned)))
+    else
+      cleaned;
   buildKustomization =
     { pkgs, ... }:
     {

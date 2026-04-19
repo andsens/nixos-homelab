@@ -1,11 +1,6 @@
 { lib, ... }:
 with builtins;
 rec {
-  replaceInvalidCharacters =
-    validCharsRE: replaceWith: string:
-    lib.concatStrings (
-      map (c: if match validCharsRE c == null then replaceWith else c) (lib.stringToCharacters string)
-    );
   mkDotPath =
     resource: path: default:
     if path == "." then resource else lib.attrByPath (lib.splitString "." path) default resource;
@@ -21,35 +16,13 @@ rec {
       labels."app.kubernetes.io/name" = name;
     }
     // dotPath "metadata" (throw "You must specify metadata");
-  pathToMountName =
-    path:
-    let
-      cleaned = replaceInvalidCharacters "[a-z0-9-]" "-" (
-        lib.toLower (lib.strings.removePrefix "/" path)
-      );
-    in
-    if lib.stringLength cleaned > 63 then
-      ((substring 0 54 cleaned) + "-" + (substring 0 8 (hashString "sha256" cleaned)))
-    else
-      cleaned;
-  mkChownContainer = cfg: volumeNames: {
-    name = "chown-data";
-    image = "${cfg.service-macros.utilityImage}";
-    imagePullPolicy = "Never";
-    args = [
-      "chown ${toString cfg.service-macros.defaultUser.uid}:${toString cfg.service-macros.defaultUser.gid} ${
-        lib.escapeShellArgs (map (name: "/vol/${name}") volumeNames)
-      }"
-    ];
-    securityContext.readOnlyRootFilesystem = true;
-    volumeMountsByPath = lib.mergeAttrsList (map (name: { "/vol/${name}" = name; }) volumeNames);
-  };
   transformServiceMacro =
     cfg: resource:
     let
       dotPath = mkDotPath resource;
       metadata = buildMetadata resource;
-      servicePodSpec = (dotPath "spec.podSpec" (dotPath "spec.servicePodSpec" null));
+      dataPath = dotPath "spec.dataPath" null;
+      servicePodSpec = dotPath "spec.servicePodSpec" null;
       portsByName = (lib.attrByPath [ "mainContainer" "portsByName" ] { } servicePodSpec);
       netpolPorts = lib.mapAttrsToList (
         name: portSpec:
@@ -78,9 +51,30 @@ rec {
           inherit metadata;
           apiVersion = "cluster.local";
           kind = "ServiceDeployment";
-          spec = { inherit allowEgress allowIngress servicePodSpec; };
+          spec = {
+            inherit allowEgress allowIngress;
+            servicePodSpec =
+              if dataPath != null then
+                lib.recursiveUpdate {
+                  securityContext.fsGroup = cfg.service-macros.defaultUser.gid;
+                  mainContainer.volumeMountsByPath.${dataPath} = "data";
+                  volumesByName.data.persistentVolumeClaim.claimName = metadata.name;
+                } servicePodSpec
+              else
+                servicePodSpec;
+          };
         }
       ]
+      ++ (lib.optional (dataPath != null) {
+        apiVersion = "v1";
+        kind = "PersistentVolumeClaim";
+        inherit metadata;
+        spec = {
+          accessModes = [ "ReadWriteOnce" ];
+          resources.requests.storage = "1Gi";
+          volumeMode = "Filesystem";
+        };
+      })
       ++ (
         lib.optionals (length (attrNames portsByName) > 0) [
           {
@@ -164,30 +158,6 @@ rec {
     let
       dotPath = mkDotPath resource;
       name = dotPath "servicePodSpec.name" (throw "The ServicePodSpec has no name");
-      addDataMount = dotPath "servicePodSpec.addDataMount" false;
-      _chownVolumes = (dotPath "servicePodSpec.chownVolumes" [ ]) ++ (lib.optional addDataMount "data");
-      _volumeMountsByPath =
-        (dotPath "servicePodSpec..mainContainer.volumeMountsByPath" { })
-        // (lib.optionalAttrs addDataMount {
-          "${cfg.service-macros.dataPath}/${name}".name = "data";
-        })
-        // (mapAttrs (path: hostMount: {
-          name = lib.attrByPath [ "name" ] (pathToMountName path) hostMount;
-          readOnly = lib.attrByPath [ "readOnly" ] false hostMount;
-        }) (dotPath "servicePodSpec.mainContainer.hostMounts" { }));
-      _volumesByName =
-        (dotPath "servicePodSpec.volumesByName" { })
-        // (lib.optionalAttrs addDataMount {
-          data = {
-            hostPath.path = "${cfg.service-macros.dataPath}/${name}";
-            hostPath.type = "DirectoryOrCreate";
-          };
-        })
-        // (lib.mapAttrs' (path: hostMount: {
-          name = lib.attrByPath [ "name" ] (pathToMountName path) hostMount;
-          value.hostPath.path = path;
-          value.hostPath.type = lib.attrByPath [ "type" ] "Directory" hostMount;
-        }) (dotPath "servicePodSpec.mainContainer.hostMounts" { }));
     in
     if (dotPath "servicePodSpec" null) == null then
       resource
@@ -196,9 +166,6 @@ rec {
         spec =
           lib.recursiveUpdate
             {
-              initContainersByName = lib.optionalAttrs (length _chownVolumes > 0) ({
-                chown-data = mkChownContainer cfg _chownVolumes;
-              });
               containersByName = {
                 "${name}" =
                   lib.recursiveUpdate
@@ -218,22 +185,19 @@ rec {
                           drop = [ "ALL" ];
                         };
                       };
-                      volumeMountsByPath = _volumeMountsByPath;
+                      volumeMountsByPath = dotPath "servicePodSpec.mainContainer.volumeMountsByPath" { };
                     }
                     (
                       removeAttrs (dotPath "servicePodSpec.mainContainer" { }) [
                         "addCapabilities"
-                        "hostMounts"
                       ]
                     );
               };
-              volumesByName = _volumesByName;
+              volumesByName = dotPath "servicePodSpec.volumesByName" { };
             }
             (
               removeAttrs ((dotPath "servicePodSpec") (throw "Unable to find 'servicePodSpec' attribute")) [
                 "name"
-                "addDataMount"
-                "chownVolumes"
                 "mainContainer"
               ]
             );

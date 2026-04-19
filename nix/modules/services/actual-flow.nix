@@ -53,7 +53,7 @@ let
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
       groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -d "${ccfg.dataPath}/actualbudget" actual-flow
+      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -d /data actual-flow
     '';
     config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
     config.Entrypoint = [
@@ -133,9 +133,9 @@ in
       destinations = [ "actualbudget" ];
     };
     services.k3s.images = [ actualFlowImage ];
-    services.restic.backups.default.paths = [
-      "${ccfg.dataPath}/actual-flow"
-    ];
+    # services.restic.backups.default.paths = [
+    #   "${ccfg.dataPath}/actual-flow"
+    # ];
     kubetree.resources.actual-flow = {
       config = {
         apiVersion = "v1";
@@ -154,6 +154,17 @@ in
           accountMappings = cfg.importConfig.accountMappings;
         };
       };
+      data = {
+        apiVersion = "v1";
+        kind = "PersistentVolumeClaim";
+        metadata.namespace = "actualbudget";
+        metadata.name = "actual-flow";
+        spec = {
+          accessModes = [ "ReadWriteOnce" ];
+          resources.requests.storage = "1Gi";
+          volumeMode = "Filesystem";
+        };
+      };
       import-transactions = {
         apiVersion = "batch/v1";
         kind = "CronJob";
@@ -170,7 +181,7 @@ in
           servicePodSpec = {
             name = "actual-flow";
             restartPolicy = "OnFailure";
-            chownVolumes = [ "data" ];
+            securityContext.fsGroup = config.kubetree.service-macros.defaultUser.gid;
             initContainersByName.setup-config = {
               image = "${flakePkgs.container-utils.buildArgs.name}:${flakePkgs.container-utils.imageTag}";
               imagePullPolicy = "Never";
@@ -198,19 +209,21 @@ in
             mainContainer = {
               image = "${actualFlowImage.buildArgs.name}:${actualFlowImage.imageTag}";
               imagePullPolicy = "Never";
-              workingDir = "${ccfg.dataPath}/actual-flow";
+              workingDir = "/data";
               args = [ "import" ];
               volumeMountsByPath = {
-                "${ccfg.dataPath}/actual-flow/config.json" = {
+                "/data/config.json" = {
                   name = "config-tmp";
                   subPath = "config.json";
                 };
-                "${ccfg.dataPath}/actual-flow/actual-data" = "data";
+                "/data/actual-data" = "data";
               };
             };
-            volumesByName.config.configMap.name = "actual-flow";
-            volumesByName.config-tmp.emptyDir = { };
-            volumesByName.data.hostPath.path = "${ccfg.dataPath}/actual-flow";
+            volumesByName = {
+              config.configMap.name = "actual-flow";
+              config-tmp.emptyDir = { };
+              data.persistentVolumeClaim.claimName = "actual-flow";
+            };
           };
         };
       };
