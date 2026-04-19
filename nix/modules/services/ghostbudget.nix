@@ -190,7 +190,7 @@ in
                   };
                 };
                 volumesByName.config.configMap.name = "ghostbudget";
-                volumesByName.data.persistentVolumeClaim.claimName = "alloy";
+                volumesByName.data.persistentVolumeClaim.claimName = "ghostbudget";
                 volumesByName.log.emptyDir = { };
               };
             };

@@ -79,8 +79,8 @@ in
             "postgresql"
           ];
           allowIngress = [ "gateway" ];
+          dataPath = "/var/lib/grafana";
           servicePodSpec = {
-            dataPath = "/var/lib/grafana";
             mainContainer = {
               image = cfg.image;
               portsByName.web = 3000;
