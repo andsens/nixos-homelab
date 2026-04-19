@@ -18,10 +18,10 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -d /data flood
+      groupadd -r -g 900 flood
+      useradd -r -u 900 -g flood -d /data flood
     '';
-    config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
+    config.User = "900:900";
     config.Entrypoint = [
       (pkgs.lib.getExe pkgs.flood)
     ];

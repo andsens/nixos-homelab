@@ -56,7 +56,6 @@ rec {
             servicePodSpec =
               if dataPath != null then
                 lib.recursiveUpdate {
-                  securityContext.fsGroup = cfg.service-macros.defaultUser.gid;
                   mainContainer.volumeMountsByPath.${dataPath} = "data";
                   volumesByName.data.persistentVolumeClaim.claimName = metadata.name;
                 } servicePodSpec
@@ -166,6 +165,7 @@ rec {
         spec =
           lib.recursiveUpdate
             {
+              securityContext.fsGroup = cfg.service-macros.runAsGroup;
               containersByName = {
                 "${name}" =
                   lib.recursiveUpdate
@@ -174,8 +174,8 @@ rec {
                       securityContext = {
                         allowPrivilegeEscalation = false;
                         readOnlyRootFilesystem = true;
-                        runAsUser = cfg.service-macros.defaultUser.uid;
-                        runAsGroup = cfg.service-macros.defaultUser.gid;
+                        runAsUser = cfg.service-macros.runAsUser;
+                        runAsGroup = cfg.service-macros.runAsGroup;
                         capabilities = {
                           add =
                             (dotPath "servicePodSpec.mainContainer.addCapabilities" [ ])

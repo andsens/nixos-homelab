@@ -22,11 +22,10 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 100 users
-      groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d /data sonarr
+      groupadd -r -g 900 sonarr
+      useradd -r -u 900 -g sonarr -d /data sonarr
     '';
-    config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
+    config.User = "900:900";
     config.Entrypoint = [
       (pkgs.lib.getExe pkgs.sonarr)
     ];

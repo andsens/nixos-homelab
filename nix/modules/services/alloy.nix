@@ -71,7 +71,6 @@ in
             };
             template.servicePodSpec = {
               name = "alloy";
-              securityContext.fsGroup = config.kubetree.service-macros.defaultUser.gid;
               mainContainer = {
                 image = "docker.io/grafana/alloy:v1.11.3";
                 args = [

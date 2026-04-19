@@ -78,11 +78,10 @@
         runAsRoot = ''
           #!${pkgs.runtimeShell}
           ${pkgs.dockerTools.shadowSetup}
-          groupadd -r -g 100 users
-          groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-          useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d /data rtorrent
+          groupadd -r -g 900 rtorrent
+          useradd -r -u 900 -g rtorrent -d /data rtorrent
         '';
-        config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
+        config.User = "900:900";
         config.Entrypoint = [
           (pkgs.lib.getExe wrapper)
         ];
@@ -107,7 +106,6 @@
           template.servicePodSpec = {
             name = "rtorrent";
             terminationGracePeriodSeconds = 10;
-            securityContext.fsGroup = config.kubetree.service-macros.defaultUser.gid;
             initContainersByName.rm-locks = {
               image = "${flakePkgs.container-utils.buildArgs.name}:${flakePkgs.container-utils.imageTag}";
               imagePullPolicy = "Never";

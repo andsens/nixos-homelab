@@ -23,13 +23,12 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 100 users
-      groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d /var/lib/plex plex
+      groupadd -r -g 900 plex
+      useradd -r -u 900 -g plex -d /var/lib/plex plex
       # https://github.com/NixOS/nixpkgs/blob/3f40c4f8c496308680d71d9e17bce452928a2e17/pkgs/servers/plex/default.nix#L57
       cat "${pkgs.plexRaw.basedb}" >/db
     '';
-    config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
+    config.User = "900:900";
     config.Entrypoint = [
       "${pkgs.plexRaw}/lib/plexmediaserver/Plex Media Server"
     ];
@@ -114,7 +113,7 @@ in
           issuerRef = {
             group = "cert-manager.io";
             kind = "ClusterIssuer";
-            name = ccfg.acmeProvider;
+            name = config.kubetree.service-macros.acmeProvider;
           };
           keystores.pkcs12 = {
             create = true;

@@ -22,11 +22,10 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 100 users
-      groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -G users -d /data radarr
+      groupadd -r -g 900 radarr
+      useradd -r -u 900 -g radarr -d /data radarr
     '';
-    config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
+    config.User = "900:900";
     config.Entrypoint = [
       (pkgs.lib.getExe pkgs.radarr)
     ];

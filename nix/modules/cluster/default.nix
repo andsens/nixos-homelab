@@ -89,18 +89,6 @@ in
       description = "Path for services whose data should persist across cluster iterations (hostPath mount)";
       type = lib.types.str;
     };
-    defaultUser.uid = lib.mkOption {
-      description = "Default user UID for workloads";
-      type = lib.types.int;
-      default = config.users.users.admin.uid;
-      defaultText = "\${config.users.users.admin.uid}";
-    };
-    defaultUser.gid = lib.mkOption {
-      description = "Default group GID for workloads";
-      type = lib.types.int;
-      default = config.users.groups.admin.gid;
-      defaultText = "\${config.users.groups.admin.gid}";
-    };
   };
   imports = [
     inputs.kubetree.nixosModules.default
@@ -124,12 +112,7 @@ in
       cilium.enable = true;
       service-macros = {
         enable = true;
-        inherit (ccfg)
-          domain
-          acmeProvider
-          defaultUser
-          ;
-        utilityImage = "${flakePkgs.container-utils.buildArgs.name}:${flakePkgs.container-utils.imageTag}";
+        domain = ccfg.domain;
       };
     };
 

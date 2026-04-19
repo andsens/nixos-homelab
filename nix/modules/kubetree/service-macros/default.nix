@@ -22,13 +22,13 @@ in
       description = "The ACME provider that Ingresses should use for obtaining TLS certs";
       type = lib.types.str;
     };
-    defaultUser.uid = lib.mkOption {
-      description = "Default user UID for pods";
+    runAsUser = lib.mkOption {
+      description = "UID for pods to run as";
       type = lib.types.int;
       default = 1000;
     };
-    defaultUser.gid = lib.mkOption {
-      description = "Default group GID for pods";
+    runAsGroup = lib.mkOption {
+      description = "GID for pods to run with, also sets securityContext.fsGroup";
       type = lib.types.int;
       default = 1000;
     };

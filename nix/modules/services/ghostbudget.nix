@@ -49,10 +49,10 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin ghostbudget
+      groupadd -r -g 900 ghostbudget
+      useradd -r -u 900 -g ghostbudget ghostbudget
     '';
-    config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
+    config.User = "900:900";
     config.Entrypoint = [
       (pkgs.lib.getExe nodejs)
       "/src/index.js"
@@ -166,7 +166,6 @@ in
               servicePodSpec = {
                 name = "ghostbudget";
                 restartPolicy = "OnFailure";
-                securityContext.fsGroup = config.kubetree.service-macros.defaultUser.gid;
                 mainContainer = {
                   image = "${ghostbudgetImage.buildArgs.name}:${ghostbudgetImage.imageTag}";
                   imagePullPolicy = "Never";

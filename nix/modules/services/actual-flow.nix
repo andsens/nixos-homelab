@@ -52,10 +52,10 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString ccfg.defaultUser.gid} admin
-      useradd -r -u ${toString ccfg.defaultUser.uid} -g admin -d /data actual-flow
+      groupadd -r -g 900 actual-flow
+      useradd -r -u 900 -g actual-flow -d /data actual-flow
     '';
-    config.User = "${toString ccfg.defaultUser.uid}:${toString ccfg.defaultUser.gid}";
+    config.User = "900:900";
     config.Entrypoint = [
       (pkgs.lib.getExe nodejs)
       "/dist/index.js"
@@ -181,7 +181,6 @@ in
           servicePodSpec = {
             name = "actual-flow";
             restartPolicy = "OnFailure";
-            securityContext.fsGroup = config.kubetree.service-macros.defaultUser.gid;
             initContainersByName.setup-config = {
               image = "${flakePkgs.container-utils.buildArgs.name}:${flakePkgs.container-utils.imageTag}";
               imagePullPolicy = "Never";
@@ -190,16 +189,16 @@ in
                   jq --arg key "$LUNCHFLOW_API_KEY" '.lunchFlow.apiKey = $key' /config/config.json >/config-tmp/config.json
                 ''
               ];
-              envByName.LUNCHFLOW_API_KEY.valueFrom.secretKeyRef = {
-                name = "lunchflow-api-key";
-                key = "LUNCHFLOW_API_KEY";
-              };
               securityContext = {
-                runAsUser = ccfg.defaultUser.uid;
-                runAsGroup = ccfg.defaultUser.gid;
+                runAsUser = config.kubetree.service-macros.runAsUser;
+                runAsGroup = config.kubetree.service-macros.runAsGroup;
                 allowPrivilegeEscalation = false;
                 readOnlyRootFilesystem = true;
                 capabilities.drop = [ "ALL" ];
+              };
+              envByName.LUNCHFLOW_API_KEY.valueFrom.secretKeyRef = {
+                name = "lunchflow-api-key";
+                key = "LUNCHFLOW_API_KEY";
               };
               volumeMountsByPath = {
                 "/config" = "config";

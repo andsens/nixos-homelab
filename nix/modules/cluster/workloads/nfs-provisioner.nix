@@ -14,20 +14,37 @@ in
     enable = lib.mkEnableOption "the NFS volume provisioner";
     server = lib.mkOption {
       description = "NFS server to use as persistent data store";
-      type = lib.types.string;
+      type = lib.types.str;
       defaultText = "\${config.networking.hostName}.\${config.homelab.cluster.domain}";
       default = "${config.networking.hostName}.${config.homelab.cluster.domain}";
     };
     path = lib.mkOption {
       description = "Export on the NFS server to use as the root";
-      type = lib.types.string;
+      type = lib.types.str;
       defaultText = "\${config.homelab.cluster.dataPath}";
       default = config.homelab.cluster.dataPath;
     };
     pathPattern = lib.mkOption {
       description = "Naming scheme for volumes on the NFS server";
-      type = lib.types.string;
+      type = lib.types.str;
       default = "\${.PVC.name}";
+    };
+    mountpointOwnership = {
+      mode = lib.mkOption {
+        description = "Filesystem mode to create the mountpoint with";
+        type = lib.types.str;
+        default = "777";
+      };
+      uid = lib.mkOption {
+        description = "UID ownership of the mountpoint";
+        type = lib.types.int;
+        default = 0;
+      };
+      gid = lib.mkOption {
+        description = "GID ownership of the mountpoint";
+        type = lib.types.int;
+        default = 0;
+      };
     };
   };
   config = {
@@ -52,9 +69,9 @@ in
               nfs = {
                 server = cfg.server;
                 path = cfg.path;
-                defaultMode = ''"750"'';
-                defaultUid = ''"0"'';
-                defaultGid = ''"0"'';
+                defaultMode = ''"${cfg.mountpointOwnership.mode}"'';
+                defaultUid = ''"${builtins.toString cfg.mountpointOwnership.uid}"'';
+                defaultGid = ''"${builtins.toString cfg.mountpointOwnership.gid}"'';
               };
               storageClass = {
                 defaultClass = true;
