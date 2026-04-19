@@ -61,7 +61,7 @@ in
       key = "SABNZBD_API_KEY";
     };
     homelab.services.homepage.allowEgress = [ "sabnzbd" ];
-    services.restic.backups.default.paths = [ "/data/backups" ];
+    # services.restic.backups.default.paths = [ "/data/backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.sabnzbd = {
       data = {

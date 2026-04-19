@@ -89,7 +89,7 @@ in
     };
   };
   config = {
-    services.restic.backups.default.paths = [ "/etc/secrets.d" ];
+    # services.restic.backups.default.paths = [ "/etc/secrets.d" ];
     services.k3s.manifests.secrets-manager-static.source = ./secrets-manager.yaml;
     kubetree.resources.secrets-manager = {
       cluster-role = {

@@ -75,9 +75,9 @@ in
       key = "PLEX_API_KEY";
     };
     homelab.services.homepage.allowEgress = [ "plex" ];
-    services.restic.backups.default.paths = [
-      "/data/Library/Application Support/Plex Media Server"
-    ];
+    # services.restic.backups.default.paths = [
+    #   "/data/Library/Application Support/Plex Media Server"
+    # ];
     services.k3s.images = [ image ];
     kubetree.resources.plex = {
       netpol = {

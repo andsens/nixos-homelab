@@ -120,10 +120,10 @@ in
       (pkgs.writeShellScriptBin "k9s" ''KUBECONFIG=/etc/rancher/k3s/k3s.yaml exec ${lib.getExe pkgs.k9s} "$@"'')
       (pkgs.writeShellScriptBin "cilium" ''KUBECONFIG=/etc/rancher/k3s/k3s.yaml exec ${lib.getExe pkgs.cilium-cli} "$@"'')
     ];
-    services.restic.backups.default.paths = [
-      "${ccfg.dataPath}/k3s/server/token"
-      "${ccfg.dataPath}/k3s/server/db"
-    ];
+    # services.restic.backups.default.paths = [
+    #   "${ccfg.dataPath}/k3s/server/token"
+    #   "${ccfg.dataPath}/k3s/server/db"
+    # ];
     systemd.tmpfiles.settings."50-k3s-data"."/var/lib/rancher/k3s"."L+" = {
       user = "root";
       group = "root";
