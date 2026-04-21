@@ -78,8 +78,9 @@
         runAsRoot = ''
           #!${pkgs.runtimeShell}
           ${pkgs.dockerTools.shadowSetup}
+          groupadd -r -g 100 users
           groupadd -r -g 900 rtorrent
-          useradd -r -u 900 -g rtorrent -d /data rtorrent
+          useradd -r -u 900 -g rtorrent -G users -d /data rtorrent
         '';
         config.User = "900:900";
         config.Entrypoint = [

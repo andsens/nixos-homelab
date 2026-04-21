@@ -22,8 +22,9 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
+      groupadd -r -g 100 users
       groupadd -r -g 900 radarr
-      useradd -r -u 900 -g radarr -d /data radarr
+      useradd -r -u 900 -g radarr -G users -d /data radarr
     '';
     config.User = "900:900";
     config.Entrypoint = [
