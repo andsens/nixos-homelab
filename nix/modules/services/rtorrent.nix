@@ -8,10 +8,6 @@
 {
   options.homelab.services.rtorrent = {
     enable = lib.mkEnableOption "rtorrent";
-    dataVolume = lib.mkOption {
-      description = "Volume source (as specificed on the pod spec) to store rtorrent data in";
-      type = lib.types.attrsOf lib.types.anything;
-    };
     downloadsVolume = lib.mkOption {
       description = "Volume source (as specificed on the pod spec) to place downloads in";
       type = lib.types.attrsOf lib.types.anything;
@@ -122,7 +118,7 @@
               args = [
                 "-n"
                 "-d"
-                "/downloads"
+                "/torrents"
                 "-s"
                 "/data"
                 "-p"
@@ -179,7 +175,7 @@
               ];
               volumeMountsByPath = {
                 "/data" = "data";
-                "/downloads" = "downloads";
+                "/torrents" = "downloads";
                 "/etc/rtorrent.rc" = {
                   name = "config";
                   subPath = "rtorrent.rc";
@@ -189,7 +185,7 @@
               };
             };
             volumesByName = {
-              data = cfg.dataVolume;
+              data.persistentVolumeClaim.claimName = "rtorrent";
               downloads = cfg.downloadsVolume;
               config.configMap.name = "config";
               log.emptyDir = { };

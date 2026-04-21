@@ -70,7 +70,7 @@ in
           portsByName.web = 3000;
           livenessProbe.httpGet.port = "web";
           readinessProbe.httpGet.port = "web";
-          volumeMountsByPath."/downloads" = "downloads";
+          volumeMountsByPath."/torrents" = "downloads";
         };
         servicePodSpec.volumesByName.downloads = config.homelab.services.rtorrent.downloadsVolume;
       };

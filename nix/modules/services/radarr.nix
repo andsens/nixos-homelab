@@ -36,7 +36,7 @@ in
   options.homelab.services.radarr = {
     enable = lib.mkEnableOption "radarr";
     volumes = lib.mkOption {
-      description = "Volumes to mount into the container expressed as a map of mountpath to volume source (as specificed on the pod spec).";
+      description = "Volumes to mount into the container expressed as a map of mountpath to volume source (as specificed on the pod spec). rtorrent & usenet download volumes are added automatically.";
       type = lib.types.attrsOf lib.types.anything;
       default = { };
     };
@@ -100,14 +100,26 @@ in
             volumeMountsByPath = {
               "/tmp" = "tmp";
             }
-            // lib.mapAttrs' (key: value: lib.nameValuePair key (self.lib.k8s.pathToMountName key)) cfg.volumes;
+            // lib.mapAttrs' (key: value: lib.nameValuePair key (self.lib.k8s.pathToMountName key)) cfg.volumes
+            // lib.optionalAttrs config.homelab.services.rtorrent.enable {
+              "/torrents" = "torrents";
+            }
+            // lib.optionalAttrs config.homelab.services.sabnzbd.enable {
+              "/usenet" = "usenet";
+            };
           };
           volumesByName = {
             tmp.emptyDir = { };
           }
           // lib.mapAttrs' (
             key: value: lib.nameValuePair (self.lib.k8s.pathToMountName key) value
-          ) cfg.volumes;
+          ) cfg.volumes
+          // lib.optionalAttrs config.homelab.services.rtorrent.enable {
+            torrents = config.homelab.services.rtorrent.downloadsVolume;
+          }
+          // lib.optionalAttrs config.homelab.services.sabnzbd.enable {
+            usenet = config.homelab.services.sabnzbd.downloadsVolume;
+          };
         };
       };
     };

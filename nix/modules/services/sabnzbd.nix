@@ -98,8 +98,8 @@ in
                   host = 0.0.0.0
                   port = 8080
                   host_whitelist = sabnzbd.${ccfg.domain},sabnzbd.sabnzbd,
-                  download_dir = /downloads/incomplete
-                  complete_dir = /downloads/complete
+                  download_dir = /usenet/incomplete
+                  complete_dir = /usenet/complete
                   schedlines = "1 0 21 7 create_backup ",
                   backup_dir = "/data/backups"
                   EOF
@@ -122,7 +122,7 @@ in
               readinessProbe.httpGet.port = "web";
               volumeMountsByPath = {
                 "/data" = "data";
-                "/downloads" = "downloads";
+                "/usenet" = "downloads";
                 "/tmp" = "tmp";
               };
             };
