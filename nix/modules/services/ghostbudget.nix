@@ -1,4 +1,4 @@
-{ ... }:
+{ self, ... }:
 {
   pkgs,
   lib,
@@ -107,11 +107,13 @@ in
     lib.mkIf (cfg.enable && cfg.importSchedule != null && config.homelab.services.actualbudget.enable)
       {
         services.k3s.images = [ ghostbudgetImage ];
-        /**
-          $ cat /etc/secrets.d/ghostfolio-token.env
-          GHOSTFOLIO_TOKEN='0e3e75234abc68f4378a86b3f4b32a19...'
-        */
-        homelab.cluster.secretsManager.importSecrets.ghostfolio-token.destinations = [ "ghostfolio" ];
+        setup-secrets.destinations = [
+          {
+            logPrefix = "Ghostbudget (GHOSTFOLIO_TOKEN)";
+            requires = [ "GHOSTFOLIO_TOKEN" ];
+            cmd = self.lib.setup-secrets.mkScript pkgs ''setKubeSecret ghostfolio ghostfolio-token GHOSTFOLIO_TOKEN "$GHOSTFOLIO_TOKEN"'';
+          }
+        ];
         kubetree.resources.ghostbudget = {
           config = {
             apiVersion = "v1";

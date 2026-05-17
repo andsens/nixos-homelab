@@ -1,11 +1,11 @@
-{ ... }:
+{ self, ... }:
 {
   lib,
   config,
+  pkgs,
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.services.ghostfolio;
 in
 {
@@ -14,73 +14,68 @@ in
   };
   # TODO: Add tini
   config = lib.mkIf cfg.enable {
-    homelab.services.homepage.envByName.HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN.valueFrom.secretKeyRef = {
-      name = "ghostfolio-api-token";
-      key = "GHOSTFOLIO_API_TOKEN";
-    };
     homelab.services = {
       postgresql.enable = true;
       postgresql.databases.ghostfolio.backup.enable = true;
       redis.enable = true;
-      homepage.allowEgress = [ "ghostfolio" ];
-      homepage.services.Finance.Ghostfolio = {
-        icon = "ghostfolio.png";
-        description = "Portfolio tracker";
-        href = "https://ghostfolio.${ccfg.domain}";
-        widget = {
-          type = "ghostfolio";
-          url = "http://ghostfolio.ghostfolio:3333";
-          fields = [
-            "gross_percent_today"
-            "gross_percent_1y"
-            "net_worth"
-          ];
-          key = "{{HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN}}";
-        };
-      };
     };
-    homelab.cluster.secretsManager = {
-      importSecrets.ghostfolio-token = {
-        extractCommands.GHOSTFOLIO_TOKEN = "source /etc/secrets.d/ghostfolio-token.env; echo $GHOSTFOLIO_TOKEN";
+    setup-secrets = {
+      sources.GHOSTFOLIO_TOKEN = {
+        description = "Ghostfolio Token";
+        cmd = self.lib.setup-secrets.mkScript pkgs "getKubeSecret ghostfolio ghostfolio-token GHOSTFOLIO_TOKEN";
       };
-      allowEgress = [ "ghostfolio" ];
-      importSecrets.ghostfolio-api-token = {
-        refresh = true;
-        # Shown when Ghostfolio is initialized
-        extractCommands.GHOSTFOLIO_API_TOKEN = ''
-          source /etc/secrets.d/ghostfolio-token.env
-          curl -sX POST http://ghostfolio.ghostfolio:3333/api/v1/auth/anonymous -H 'Content-Type: application/json' -d "{ \"accessToken\": \"$GHOSTFOLIO_TOKEN\" }" | \
-            jq -r .authToken
+      sources.GHOSTFOLIO_ACCESS_TOKEN_SALT = {
+        description = "Ghostfolio Access Token Salt";
+        cmd = self.lib.setup-secrets.mkScript pkgs ''
+          getKubeSecret ghostfolio ghostfolio-secrets ACCESS_TOKEN_SALT || \
+          tr -dc A-Za-z0-9 </dev/urandom | head -c 64; echo
         '';
-        destinations = [ "homepage" ];
       };
-      importSecrets.ghostfolio-secrets = {
-        # Generate both with `tr -dc A-Za-z0-9 </dev/urandom | head -c 64; echo`
-        extractCommands.ACCESS_TOKEN_SALT = "source /etc/secrets.d/ghostfolio-secrets.env; echo $ACCESS_TOKEN_SALT";
-        extractCommands.JWT_SECRET_KEY = "source /etc/secrets.d/ghostfolio-secrets.env; echo $JWT_SECRET_KEY";
-        destinations = [ "ghostfolio" ];
+      sources.GHOSTFOLIO_JWT_SECRET_KEY = {
+        description = "Ghostfolio JWT Secret Key";
+        cmd = self.lib.setup-secrets.mkScript pkgs ''
+          getKubeSecret ghostfolio ghostfolio-secrets JWT_SECRET_KEY || \
+          tr -dc A-Za-z0-9 </dev/urandom | head -c 64; echo
+        '';
       };
+      destinations = [
+        {
+          logPrefix = "Ghostfolio (ACCESS_TOKEN_SALT & JWT_SECRET_KEY)";
+          requires = [
+            "GHOSTFOLIO_ACCESS_TOKEN_SALT"
+            "GHOSTFOLIO_JWT_SECRET_KEY"
+          ];
+          cmd = self.lib.setup-secrets.mkScript pkgs ''
+            kubectl create secret generic -n ghostfolio --dry-run=client ghostfolio-secrets -oyaml \
+              --from-literal=ACCESS_TOKEN_SALT="$GHOSTFOLIO_ACCESS_TOKEN_SALT" \
+              --from-literal=JWT_SECRET_KEY="$GHOSTFOLIO_JWT_SECRET_KEY" \
+              | kubectl apply -f -
+          '';
+        }
+      ];
     };
-    kubetree.resources.ghostfolio.content = {
-      apiVersion = "cluster.local";
-      kind = "ServiceMacro";
-      metadata.name = "ghostfolio";
-      spec = {
-        allowEgress = [
-          "internet"
-          "postgresql"
-          "redis"
-        ];
-        ingressPort = 3333;
-        servicePodSpec.mainContainer = {
-          image = "ghostfolio/ghostfolio:2.228.0";
-          envByName."DATABASE_URL" =
-            "postgresql://ghostfolio:ghostfolio@postgresql.postgresql:5432/ghostfolio";
-          envByName."REDIS_HOST" = "redis.redis";
-          portsByName.web = 3333;
-          envFrom = [ { secretRef.name = "ghostfolio-secrets"; } ];
-          livenessProbe.httpGet.port = "web";
-          readinessProbe.httpGet.port = "web";
+    kubetree.resources.ghostfolio = {
+      service = {
+        apiVersion = "cluster.local";
+        kind = "ServiceMacro";
+        metadata.name = "ghostfolio";
+        spec = {
+          allowEgress = [
+            "internet"
+            "postgresql"
+            "redis"
+          ];
+          ingressPort = 3333;
+          servicePodSpec.mainContainer = {
+            image = "ghostfolio/ghostfolio:2.228.0";
+            envByName."DATABASE_URL" =
+              "postgresql://ghostfolio:ghostfolio@postgresql.postgresql:5432/ghostfolio";
+            envByName."REDIS_HOST" = "redis.redis";
+            portsByName.web = 3333;
+            envFrom = [ { secretRef.name = "ghostfolio-secrets"; } ];
+            livenessProbe.httpGet.port = "web";
+            readinessProbe.httpGet.port = "web";
+          };
         };
       };
     };

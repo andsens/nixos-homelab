@@ -10,11 +10,14 @@ let
   cfg = config.homelab.services.radarr;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/radarr";
-    copyToRoot = [
-      pkgs.radarr
-      pkgs.cacert
-    ]
-    ++ ccfg.debugTools;
+    copyToRoot =
+      with pkgs;
+      [
+        radarr
+        cacert
+        xq-xml # for extracting the API token
+      ]
+      ++ ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -42,26 +45,10 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homelab.services.homepage.services.Managers.Radarr = {
-      sort = 70;
-      icon = "radarr.png";
-      description = "Movie library manager";
-      href = "https://radarr.${ccfg.domain}";
-      widget = {
-        type = "radarr";
-        url = "http://radarr.radarr:7878";
-        key = "{{HOMEPAGE_VAR_RADARR_API_KEY}}";
-      };
+    setup-secrets.sources.RADARR_API_KEY = {
+      description = "Radarr API Key";
+      cmd = self.lib.setup-secrets.mkScript pkgs ''kubectl exec -n radarr -c radarr deploy/radarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
-    homelab.cluster.secretsManager.importSecrets.radarr-api-key = {
-      extractCommands.RADARR_API_KEY = ''xq -q 'Config>ApiKey' "${ccfg.dataPath}/radarr/config.xml"'';
-      destinations = [ "homepage" ];
-    };
-    homelab.services.homepage.envByName.HOMEPAGE_VAR_RADARR_API_KEY.valueFrom.secretKeyRef = {
-      name = "radarr-api-key";
-      key = "RADARR_API_KEY";
-    };
-    homelab.services.homepage.allowEgress = [ "radarr" ];
     # services.restic.backups.default.paths = [ "${ccfg.dataPath}/radarr/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.radarr.content = {
@@ -81,9 +68,10 @@ in
         servicePodSpec = {
           mainContainer = {
             image = "${image.buildArgs.name}:${image.imageTag}";
-            addCapabilities = [ "CHOWN" ];
             imagePullPolicy = "Never";
             args = [ "-data=/data" ];
+            # securityContext.supplementalGroups = [ 100 ];
+            addCapabilities = [ "CHOWN" ];
             envByName.RADARR__AUTH__ENABLED = "false";
             envByName.RADARR__AUTH__METHOD = "External";
             envByName.RADARR__APP__LAUNCHBROWSER = "false";

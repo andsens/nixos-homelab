@@ -103,9 +103,9 @@ in
     ./workloads/netutils.nix
     ./workloads/networkpolicies.nix
     ./workloads/nfs-provisioner.nix
-    ./workloads/secrets-manager.nix
   ];
   config = lib.mkIf ccfg.enable {
+    systemd.services."setup-secrets".after = [ "k3s.service" ];
     services.k3s.enable = true;
     kubetree = {
       k3s.enable = true;

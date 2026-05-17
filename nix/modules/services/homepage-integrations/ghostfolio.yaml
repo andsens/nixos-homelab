@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: refresh-ghostfolio-api-token
+  name: refresh-ghostfolio-api-token
+  labels:
+    app.kubernetes.io/name: homepage
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: homepage
+  name: refresh-ghostfolio-api-token
+  labels.app.kubernetes.io/name: homepage
+rules:
+- apiGroups: [ "" ]
+  resources: [ secrets ]
+  resourceNames: ghostfolio-token
+  verbs:
+  - get
+- apiGroups: [ "" ]
+  resources: [ secrets ]
+  verbs: [ create ]
+- apiGroups: [ "" ]
+  resources: [ secrets ]
+  resourceNames: ghostfolio-api-token
+  verbs:
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: refresh-ghostfolio-api-token
+  labels:
+    app.kubernetes.io/name: homepage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: refresh-ghostfolio-api-token
+subjects:
+- kind: ServiceAccount
+  namespace: homepage
+  name: refresh-ghostfolio-api-token

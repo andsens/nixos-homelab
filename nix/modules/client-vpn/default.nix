@@ -112,11 +112,35 @@ in
   };
   config = lib.mkIf cfg.enable {
     services.k3s.images = [ image ];
-    homelab.cluster.secretsManager.importSecrets.client-vpn-private-keys = {
-      extractCommands = lib.mapAttrs' (
-        group: spec: lib.nameValuePair group "cat /etc/secrets.d/${group}-vpn.key"
+    setup-secrets = {
+      sources = lib.mapAttrs' (
+        group: spec:
+        lib.nameValuePair "CLIENT_VPN_${group}" {
+          description = "Client VPN ${group} private key";
+          cmd = self.lib.setup-secrets.mkScript pkgs ''
+            getKubeSecret client-vpn client-vpn-private-keys ${group} || \
+            ${lib.getExe' pkgs.wireguard-tools "wg"} genkey
+          '';
+        }
       ) cfg.groups;
-      destinations = [ "client-vpn" ];
+      destinations = [
+        {
+          logPrefix = "Client VPN Private Keys";
+          requires = map (group: "CLIENT_VPN_${group}") (builtins.attrNames cfg.groups);
+          cmd = self.lib.setup-secrets.mkScript pkgs ''
+            kubectl create secret generic -n client-vpn --dry-run=client -oyaml client-vpn-private-keys \
+              ${
+                lib.join "\\ \n" (
+                  map (group: "--from-literal=CLIENT_VPN_${group}='''$CLIENT_VPN_${group}'") (
+                    builtins.attrNames cfg.groups
+                  )
+                )
+              } \
+              -oyaml | \
+              kubectl apply -f -
+          '';
+        }
+      ];
     };
     kubetree.resources.client-vpn = {
       namespace = {

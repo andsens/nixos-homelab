@@ -1,6 +1,7 @@
-{ ... }:
+{ self, ... }:
 {
   lib,
+  pkgs,
   config,
   ...
 }:
@@ -77,6 +78,22 @@ in
         }
       ];
       privateKeyFile = "/etc/secrets.d/privacy-vpn.key";
+    };
+    setup-secrets = {
+      sources.PRIVACY_VPN_PRIVATE_KEY = {
+        description = "Private Key for privacy VPN connection";
+        cmd = self.lib.setup-secrets.mkScript pkgs ''cat "${config.networking.wireguard.interfaces.privacy-vpn.privateKeyFile}"'';
+      };
+      destinations = [
+        {
+          logPrefix = "Privacy VPN Private Key File";
+          requires = [ "PRIVACY_VPN_PRIVATE_KEY" ];
+          cmd = self.lib.setup-secrets.mkScript pkgs ''
+            umask 077
+            printf "%s" "$PRIVACY_VPN_PRIVATE_KEY" >"${config.networking.wireguard.interfaces.privacy-vpn.privateKeyFile}"
+          '';
+        }
+      ];
     };
     networking.useNetworkd = true; # very much needed for this setup to work in the way it's configured
     systemd.network.networks."40-privacy-vpn" = {

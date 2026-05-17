@@ -128,9 +128,18 @@ in
     };
   };
   config = lib.mkIf (cfg.enable && cfg.importSchedule != null) {
-    homelab.cluster.secretsManager.importSecrets.lunchflow-api-key = {
-      extractCommands.LUNCHFLOW_API_KEY = "source /etc/secrets.d/lunchflow-api-key.env; echo $LUNCHFLOW_API_KEY";
-      destinations = [ "actualbudget" ];
+    setup-secrets = {
+      sources.LUNCHFLOW_API_KEY = {
+        description = "Lunchflow API Key";
+        cmd = self.lib.setup-secrets.mkScript pkgs "getKubeSecret actualbudget lunchflow-api-key LUNCHFLOW_API_KEY";
+      };
+      destinations = [
+        {
+          logPrefix = "Actualbudget (LUNCHFLOW_API_KEY)";
+          requires = [ "LUNCHFLOW_API_KEY" ];
+          cmd = self.lib.setup-secrets.mkScript pkgs "setKubeSecret actualbudget lunchflow-api-key LUNCHFLOW_API_KEY LUNCHFLOW_API_KEY";
+        }
+      ];
     };
     services.k3s.images = [ actualFlowImage ];
     # services.restic.backups.default.paths = [

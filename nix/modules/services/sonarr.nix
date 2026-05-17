@@ -10,11 +10,14 @@ let
   cfg = config.homelab.services.sonarr;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/sonarr";
-    copyToRoot = [
-      pkgs.sonarr
-      pkgs.cacert
-    ]
-    ++ ccfg.debugTools;
+    copyToRoot =
+      with pkgs;
+      [
+        sonarr
+        cacert
+        xq-xml # for extracting the API token
+      ]
+      ++ ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -47,26 +50,10 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homelab.services.homepage.services.Managers.Sonarr = {
-      sort = 50;
-      icon = "sonarr.png";
-      description = "TV Show library manager";
-      href = "https://sonarr.${ccfg.domain}";
-      widget = {
-        type = "sonarr";
-        url = "http://sonarr.sonarr:8989";
-        key = "{{HOMEPAGE_VAR_SONARR_API_KEY}}";
-      };
+    setup-secrets.sources.SONARR_API_KEY = {
+      description = "Sonarr API Key";
+      cmd = self.lib.setup-secrets.mkScript pkgs ''kubectl exec -n sonarr -c sonarr deploy/sonarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
-    homelab.cluster.secretsManager.importSecrets.sonarr-api-key = {
-      extractCommands.SONARR_API_KEY = ''xq -q 'Config>ApiKey' "${ccfg.dataPath}/sonarr/config.xml"'';
-      destinations = [ "homepage" ];
-    };
-    homelab.services.homepage.envByName.HOMEPAGE_VAR_SONARR_API_KEY.valueFrom.secretKeyRef = {
-      name = "sonarr-api-key";
-      key = "SONARR_API_KEY";
-    };
-    homelab.services.homepage.allowEgress = [ "sonarr" ];
     # services.restic.backups.default.paths = [ "${ccfg.dataPath}/sonarr/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.sonarr.content = {
@@ -88,6 +75,7 @@ in
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
             args = [ "-data=/data" ];
+            # securityContext.supplementalGroups = [ 100 ];
             addCapabilities = [ "CHOWN" ];
             envByName.SONARR__AUTH__ENABLED = "false";
             envByName.SONARR__AUTH__METHOD = "External";

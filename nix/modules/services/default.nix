@@ -1,8 +1,9 @@
-{ self, ... }@moduleArgs:
+{ self, inputs, ... }@moduleArgs:
 { ... }:
 {
   imports = [
     self.nixosModules.backup
+    inputs.setup-secrets.nixosModules.default
   ]
   ++ map (path: import path moduleArgs) [
     ./actual-flow.nix

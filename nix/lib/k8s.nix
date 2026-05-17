@@ -65,8 +65,7 @@ rec {
         '';
 
       installPhase = ''
-        ls -al >&2
-        ${pkgs.kubectl}/bin/kubectl kustomize "${path}" -o "$out"
+        ${lib.getExe pkgs.kubectl} kustomize "${path}" -o "$out"
       '';
     };
   patchManifest =
@@ -95,7 +94,7 @@ rec {
 
       installPhase = ''
         runHook preInstall
-        ${pkgs.kubectl}/bin/kubectl kustomize . -o "$out"
+        ${lib.getExe pkgs.kubectl} kustomize . -o "$out"
         runHook postInstall
       '';
     };

@@ -11,11 +11,14 @@ let
   flakePkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/plex";
-    copyToRoot = [
-      pkgs.plexRaw
-      pkgs.cacert
-    ]
-    ++ ccfg.debugTools;
+    copyToRoot =
+      with pkgs;
+      [
+        plexRaw
+        cacert
+        xq-xml # for extracting the API token
+      ]
+      ++ ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -51,30 +54,13 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homelab.services.homepage.services.Media.Plex = {
-      icon = "plex.png";
-      description = "Media center";
-      href = "https://plex.${ccfg.domain}";
-      widget = {
-        type = "plex";
-        url = "http://plex.plex:32400";
-        fields = [
-          "streams"
-          "movies"
-          "tv"
-        ];
-        key = "{{HOMEPAGE_VAR_PLEX_API_KEY}}";
-      };
+    setup-secrets.sources.PLEX_API_KEY = {
+      description = "Plex API Key";
+      cmd = self.lib.setup-secrets.mkScript pkgs ''
+        kubectl exec -n plex -c plex deploy/plex -- \
+          xq -x '//Preferences/@PlexOnlineToken' "/var/lib/plex/Library/Application Support/Plex Media Server/Preferences.xml"
+      '';
     };
-    homelab.cluster.secretsManager.importSecrets.plex-api-key = {
-      extractCommands.PLEX_API_KEY = ''xq -x '//Preferences/@PlexOnlineToken' "/data/Library/Application Support/Plex Media Server/Preferences.xml"'';
-      destinations = [ "homepage" ];
-    };
-    homelab.services.homepage.envByName.HOMEPAGE_VAR_PLEX_API_KEY.valueFrom.secretKeyRef = {
-      name = "plex-api-key";
-      key = "PLEX_API_KEY";
-    };
-    homelab.services.homepage.allowEgress = [ "plex" ];
     # services.restic.backups.default.paths = [
     #   "/data/Library/Application Support/Plex Media Server"
     # ];

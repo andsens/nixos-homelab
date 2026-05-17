@@ -6,7 +6,12 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     kubetree = {
       url = "github:andsens/nix-kubetree";
-      # url = "git+file:///home/anders/Workspace/nix-kubetree";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
+    setup-secrets = {
+      url = "github:andsens/nixos-setup-secrets";
+      inputs.systems.follows = "systems";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
@@ -39,6 +44,7 @@
           lib = {
             ip = import ./nix/lib/ip.nix { inherit lib; };
             k8s = import ./nix/lib/k8s.nix { inherit lib; };
+            setup-secrets = import ./nix/lib/setup-secrets.nix { inherit lib; };
           };
           nixosModules = {
             admin = args: { imports = [ (importApply ./nix/modules/admin mkFlakeArgs) ]; };

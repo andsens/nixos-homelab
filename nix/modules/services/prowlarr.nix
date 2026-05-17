@@ -1,4 +1,4 @@
-{ ... }:
+{ self, ... }:
 {
   pkgs,
   lib,
@@ -10,11 +10,14 @@ let
   cfg = config.homelab.services.prowlarr;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/prowlarr";
-    copyToRoot = [
-      pkgs.prowlarr
-      pkgs.cacert
-    ]
-    ++ ccfg.debugTools;
+    copyToRoot =
+      with pkgs;
+      [
+        prowlarr
+        cacert
+        xq-xml # for extracting the API token
+      ]
+      ++ ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -36,26 +39,10 @@ in
     enable = lib.mkEnableOption "prowlarr";
   };
   config = lib.mkIf cfg.enable {
-    homelab.services.homepage.services.Managers.Prowlarr = {
-      sort = 200;
-      icon = "prowlarr.png";
-      description = "Index scraper";
-      href = "https://prowlarr.${ccfg.domain}";
-      widget = {
-        type = "prowlarr";
-        url = "http://prowlarr.prowlarr:9696";
-        key = "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}";
-      };
+    setup-secrets.sources.PROWLARR_API_KEY = {
+      description = "Prowlarr API Key";
+      cmd = self.lib.setup-secrets.mkScript pkgs ''kubectl exec -n prowlarr -c prowlarr deploy/prowlarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
-    homelab.cluster.secretsManager.importSecrets.prowlarr-api-key = {
-      extractCommands.PROWLARR_API_KEY = ''xq -q 'Config>ApiKey' "${ccfg.dataPath}/prowlarr/config.xml"'';
-      destinations = [ "homepage" ];
-    };
-    homelab.services.homepage.envByName.HOMEPAGE_VAR_PROWLARR_API_KEY.valueFrom.secretKeyRef = {
-      name = "prowlarr-api-key";
-      key = "PROWLARR_API_KEY";
-    };
-    homelab.services.homepage.allowEgress = [ "prowlarr" ];
     # services.restic.backups.default.paths = [ "${ccfg.dataPath}/prowlarr/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.prowlarr.content = {

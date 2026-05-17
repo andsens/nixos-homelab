@@ -14,15 +14,6 @@ in
     enable = lib.mkEnableOption "metrics-server";
   };
   config = lib.mkIf cfg.enable {
-    homelab.services.homepage.widgets.resources = {
-      sort = lib.mkDefault 100;
-      backend = "resources";
-      expanded = true;
-      cpu = true;
-      memory = true;
-      network = "default";
-    };
-    homelab.services.homepage.allowEgress = [ "metrics-server" ];
     services.k3s.disable = [ "metrics-server" ];
     services.k3s.manifests.metrics-server-release.source =
       self.lib.k8s.patchManifest { inherit pkgs; }

@@ -14,6 +14,8 @@ let
     copyToRoot = [
       pkgs.sabnzbd
       pkgs.cacert
+      pkgs.coreutils
+      pkgs.gnugrep
     ]
     ++ ccfg.debugTools;
     config.Env = [
@@ -42,26 +44,13 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    homelab.services.homepage.services.Download.SABnzbd = {
-      sort = 50;
-      icon = "sabnzbd.png";
-      description = "The automated Usenet download tool ";
-      href = "https://sabnzbd.${ccfg.domain}";
-      widget = {
-        type = "sabnzbd";
-        url = "http://sabnzbd.sabnzbd:8080";
-        key = "{{HOMEPAGE_VAR_SABNZBD_API_KEY}}";
-      };
+    setup-secrets.sources.SABNZBD_API_KEY = {
+      description = "SABnzbd API Key";
+      cmd = self.lib.setup-secrets.mkScript pkgs ''
+        kubectl exec -n sabnzbd -c sabnzbd deploy/sabnzbd -- ${lib.getExe pkgs.gnugrep} '^api_key = ' "/data/sabnzbd.ini" | \
+          cut -d ' ' -f3
+      '';
     };
-    homelab.cluster.secretsManager.importSecrets.sabnzbd-api-key = {
-      extractCommands.SABNZBD_API_KEY = ''grep '^api_key = ' "/data/sabnzbd.ini" | cut -d ' ' -f3'';
-      destinations = [ "homepage" ];
-    };
-    homelab.services.homepage.envByName.HOMEPAGE_VAR_SABNZBD_API_KEY.valueFrom.secretKeyRef = {
-      name = "sabnzbd-api-key";
-      key = "SABNZBD_API_KEY";
-    };
-    homelab.services.homepage.allowEgress = [ "sabnzbd" ];
     # services.restic.backups.default.paths = [ "/data/backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.sabnzbd = {

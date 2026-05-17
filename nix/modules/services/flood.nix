@@ -38,16 +38,6 @@ in
         message = "The rtorrent service must be enabled in order for flood to work (homelab.services.rtorrent.enable)";
       }
     ];
-    homelab.services.homepage.services.Download.Flood = {
-      icon = "flood.png";
-      description = "rTorrent WebUI";
-      href = "https://flood.${ccfg.domain}";
-      widget = {
-        type = "flood";
-        url = "http://flood.flood:3000";
-      };
-    };
-    homelab.services.homepage.allowEgress = [ "flood" ];
     services.k3s.images = [ image ];
     kubetree.resources.flood.content = {
       apiVersion = "cluster.local";

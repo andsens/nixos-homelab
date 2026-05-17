@@ -1,4 +1,4 @@
-{ ... }:
+{ ... }@moduleArgs:
 {
   pkgs,
   lib,
@@ -73,6 +73,16 @@ in
       default = { };
     };
   };
+  imports = map (path: import path moduleArgs) [
+    ./homepage-integrations/flood.nix
+    ./homepage-integrations/ghostfolio.nix
+    ./homepage-integrations/grafana.nix
+    ./homepage-integrations/plex.nix
+    ./homepage-integrations/prowlarr.nix
+    ./homepage-integrations/radarr.nix
+    ./homepage-integrations/sabnzbd.nix
+    ./homepage-integrations/sonarr.nix
+  ];
   config = lib.mkIf cfg.enable {
     homelab.services.homepage.services.Media = {
       sort = lib.mkDefault 50;
