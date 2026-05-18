@@ -32,9 +32,10 @@
       {
         flake-parts-lib,
         self,
+        inputs,
         lib,
         ...
-      }@mkFlakeArgs:
+      }:
       let
         inherit (flake-parts-lib) importApply;
       in
@@ -47,17 +48,15 @@
             setup-secrets = import ./nix/lib/setup-secrets.nix { inherit lib; };
           };
           nixosModules = {
-            admin = args: { imports = [ (importApply ./nix/modules/admin mkFlakeArgs) ]; };
-            backup = args: { imports = [ (importApply ./nix/modules/backup mkFlakeArgs) ]; };
-            client-vpn = args: { imports = [ (importApply ./nix/modules/client-vpn mkFlakeArgs) ]; };
-            cluster = args: { imports = [ (importApply ./nix/modules/cluster mkFlakeArgs) ]; };
-            fileshares = args: { imports = [ (importApply ./nix/modules/fileshares mkFlakeArgs) ]; };
-            cilium = args: { imports = [ (importApply ./nix/modules/kubetree/cilium mkFlakeArgs) ]; };
-            service-macros = args: {
-              imports = [ (importApply ./nix/modules/kubetree/service-macros mkFlakeArgs) ];
-            };
-            privacy-vpn = args: { imports = [ (importApply ./nix/modules/privacy-vpn mkFlakeArgs) ]; };
-            services = args: { imports = [ (importApply ./nix/modules/services mkFlakeArgs) ]; };
+            admin = importApply ./nix/modules/admin { inherit self inputs; };
+            backup = importApply ./nix/modules/backup { inherit self inputs; };
+            client-vpn = importApply ./nix/modules/client-vpn { inherit self inputs; };
+            cluster = importApply ./nix/modules/cluster { inherit self inputs; };
+            fileshares = importApply ./nix/modules/fileshares { inherit self inputs; };
+            cilium = importApply ./nix/modules/kubetree/cilium { inherit self inputs; };
+            service-macros = importApply ./nix/modules/kubetree/service-macros { inherit self inputs; };
+            privacy-vpn = importApply ./nix/modules/privacy-vpn { inherit self inputs; };
+            services = importApply ./nix/modules/services { inherit self inputs; };
           };
         };
         perSystem =
