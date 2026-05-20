@@ -67,9 +67,9 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
-    # services.restic.backups.default.paths = (
-    #   lib.mapAttrsToList (serviceName: spec: "spec.backup.destination") dbBackups
-    # );
+    homelab.cluster.backup.volumes.postgresql.database-dumps = lib.mapAttrsToList (
+      serviceName: spec: "/dumps/${spec.dbName}.pgdump"
+    ) dbBackups;
 
     kubetree.resources.postgresql = {
       service-macro = {
@@ -186,11 +186,24 @@ in
                   };
                   volumeMountsByPath."/dumps" = "data";
                 };
-                volumesByName.data = cfg.dumpsVolume;
+                volumesByName.data.persistentVolumeClaim.claimName = "database-dumps";
               };
             };
           };
         }
-      ) dbBackups);
+      ) dbBackups)
+      // {
+        data = {
+          apiVersion = "v1";
+          kind = "PersistentVolumeClaim";
+          metadata.namespace = "postgresql";
+          metadata.name = "database-dumps";
+          spec = {
+            accessModes = [ "ReadWriteOnce" ];
+            resources.requests.storage = "1Gi";
+            volumeMode = "Filesystem";
+          };
+        };
+      };
   };
 }

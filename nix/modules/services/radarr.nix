@@ -49,7 +49,7 @@ in
       description = "Radarr API Key";
       cmd = self.lib.setup-secrets.mkScript pkgs ''kubectl exec -n radarr -c radarr deploy/radarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
-    # services.restic.backups.default.paths = [ "${ccfg.dataPath}/radarr/Backups" ];
+    homelab.cluster.backup.volumes.radarr.radarr = [ "/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.radarr.content = {
       apiVersion = "cluster.local";

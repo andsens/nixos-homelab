@@ -12,9 +12,7 @@ in
     enable = lib.mkEnableOption "Actual Budget";
   };
   config = lib.mkIf cfg.enable {
-    # services.restic.backups.default.paths = [
-    #   "${ccfg.dataPath}/actualbudget"
-    # ];
+    homelab.cluster.backup.volumes.actualbudget.actualbudget = [ "/" ];
     kubetree.resources.actualbudget = {
       service-macro = {
         apiVersion = "cluster.local";

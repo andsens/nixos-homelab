@@ -89,6 +89,14 @@ in
       description = "Path for services whose data should persist across cluster iterations (hostPath mount)";
       type = lib.types.str;
     };
+    backup.hostPaths = lib.mkOption {
+      description = "List of paths on the host that *should* be backed up, this option does not configure a backup, it is only meant for aggregation";
+      type = lib.types.listOf lib.types.str;
+    };
+    backup.volumes = lib.mkOption {
+      description = "A map of namespace -> PV claim name -> paths that *should* be backed up, this option does not configure a backup, it is only meant for aggregation";
+      type = lib.types.attrsOf (lib.types.attrsOf (lib.types.listOf lib.types.str));
+    };
   };
   imports = [
     inputs.kubetree.nixosModules.default
@@ -120,10 +128,10 @@ in
       (pkgs.writeShellScriptBin "k9s" ''KUBECONFIG=/etc/rancher/k3s/k3s.yaml exec ${lib.getExe pkgs.k9s} "$@"'')
       (pkgs.writeShellScriptBin "cilium" ''KUBECONFIG=/etc/rancher/k3s/k3s.yaml exec ${lib.getExe pkgs.cilium-cli} "$@"'')
     ];
-    # services.restic.backups.default.paths = [
-    #   "${ccfg.dataPath}/k3s/server/token"
-    #   "${ccfg.dataPath}/k3s/server/db"
-    # ];
+    homelab.cluster.backup.hostPaths = [
+      "${ccfg.dataPath}/k3s/server/token"
+      "${ccfg.dataPath}/k3s/server/db"
+    ];
     systemd.tmpfiles.settings."50-k3s-data"."/var/lib/rancher/k3s"."L+" = {
       user = "root";
       group = "root";

@@ -48,8 +48,6 @@
             setup-secrets = import ./nix/lib/setup-secrets.nix { inherit lib; };
           };
           nixosModules = {
-            admin = importApply ./nix/modules/admin { inherit self inputs; };
-            backup = importApply ./nix/modules/backup { inherit self inputs; };
             client-vpn = importApply ./nix/modules/client-vpn { inherit self inputs; };
             cluster = importApply ./nix/modules/cluster { inherit self inputs; };
             fileshares = importApply ./nix/modules/fileshares { inherit self inputs; };

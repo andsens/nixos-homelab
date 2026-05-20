@@ -43,7 +43,7 @@ in
       description = "Prowlarr API Key";
       cmd = self.lib.setup-secrets.mkScript pkgs ''kubectl exec -n prowlarr -c prowlarr deploy/prowlarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
-    # services.restic.backups.default.paths = [ "${ccfg.dataPath}/prowlarr/Backups" ];
+    homelab.cluster.backup.volumes.prowlarr.prowlarr = [ "/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.prowlarr.content = {
       apiVersion = "cluster.local";

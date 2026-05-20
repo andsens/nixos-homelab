@@ -142,9 +142,7 @@ in
       ];
     };
     services.k3s.images = [ actualFlowImage ];
-    # services.restic.backups.default.paths = [
-    #   "${ccfg.dataPath}/actual-flow"
-    # ];
+    homelab.cluster.backup.volumes.actualbudget.actual-flow = [ "/" ];
     kubetree.resources.actual-flow = {
       config = {
         apiVersion = "v1";

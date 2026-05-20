@@ -51,7 +51,7 @@ in
           cut -d ' ' -f3
       '';
     };
-    # services.restic.backups.default.paths = [ "/data/backups" ];
+    homelab.cluster.backup.volumes.sabnzbd.sabnzbd = [ "/backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.sabnzbd = {
       data = {

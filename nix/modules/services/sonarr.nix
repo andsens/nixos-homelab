@@ -54,7 +54,7 @@ in
       description = "Sonarr API Key";
       cmd = self.lib.setup-secrets.mkScript pkgs ''kubectl exec -n sonarr -c sonarr deploy/sonarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
-    # services.restic.backups.default.paths = [ "${ccfg.dataPath}/sonarr/Backups" ];
+    homelab.cluster.backup.volumes.sonarr.sonarr = [ "/Backups" ];
     services.k3s.images = [ image ];
     kubetree.resources.sonarr.content = {
       apiVersion = "cluster.local";

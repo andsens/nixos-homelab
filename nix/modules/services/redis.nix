@@ -5,7 +5,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.services.redis;
 in
 {
@@ -13,9 +12,7 @@ in
     enable = lib.mkEnableOption "Redis";
   };
   config = lib.mkIf cfg.enable {
-    # services.restic.backups.default.paths = [
-    #   "${ccfg.dataPath}/redis/dump.rdb"
-    # ];
+    homelab.cluster.backup.volumes.redis.redis = [ "/dump.rdb" ];
     kubetree.resources.redis = {
       service-macro = {
         apiVersion = "cluster.local";
