@@ -1,4 +1,4 @@
-{ self, inputs, ... }@moduleArgs:
+{ self, inputs, ... }:
 {
   lib,
   pkgs,
@@ -32,6 +32,8 @@ let
   });
 in
 {
+  # https://github.com/hercules-ci/flake-parts/pull/251
+  key = "${toString __curPos.file}#modules.nixos.cluster";
   options.homelab.cluster = {
     enable = lib.mkEnableOption "the homelab cluster";
     containers.debug = lib.mkEnableOption "debugging tools in container images";
@@ -92,25 +94,18 @@ in
     backup.hostPaths = lib.mkOption {
       description = "List of paths on the host that *should* be backed up, this option does not configure a backup, it is only meant for aggregation";
       type = lib.types.listOf lib.types.str;
+      default = [ ];
     };
     backup.volumes = lib.mkOption {
       description = "A map of namespace -> PV claim name -> paths that *should* be backed up, this option does not configure a backup, it is only meant for aggregation";
       type = lib.types.attrsOf (lib.types.attrsOf (lib.types.listOf lib.types.str));
+      default = { };
     };
   };
   imports = [
     inputs.kubetree.nixosModules.default
-    self.nixosModules.cilium
-    self.nixosModules.service-macros
-  ]
-  ++ map (path: import path moduleArgs) [
-    ./workloads/cert-manager.nix
-    ./workloads/cilium.nix
-    ./workloads/external-dns.nix
-    ./workloads/k8sss.nix
-    ./workloads/netutils.nix
-    ./workloads/networkpolicies.nix
-    ./workloads/nfs-provisioner.nix
+    self.nixosModules.kubetree-cilium
+    self.nixosModules.kubetree-service-macros
   ];
   config = lib.mkIf ccfg.enable {
     systemd.services."setup-secrets".after = [ "k3s.service" ];
@@ -139,8 +134,6 @@ in
       argument = "${ccfg.dataPath}/k3s";
     };
     systemd.globalEnvironment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-    networking.tempAddresses = lib.mkIf ccfg.bgp.enable "disabled";
-    networking.firewall.enable = !ccfg.firewall.enable;
     # https://github.com/cilium/cilium/issues/31565#issuecomment-3419710315
     networking.firewall.checkReversePath = false;
     networking.firewall.allowedTCPPorts = [ 6443 ];

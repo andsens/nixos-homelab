@@ -9,11 +9,11 @@ let
   flakePkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
 in
 {
-  options.homelab.cluster.netutils = {
+  options.homelab.netutils = {
     enable = lib.mkEnableOption "the netutils debugging container";
   };
   config = {
-    services.k3s.manifests.netutils.enable = config.homelab.cluster.netutils.enable;
+    services.k3s.manifests.netutils.enable = config.homelab.netutils.enable;
     kubetree.resources.netutils = {
       netutils-to-all = {
         apiVersion = "cilium.io/v2";

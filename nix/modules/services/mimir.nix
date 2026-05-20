@@ -5,7 +5,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.services.mimir;
 in
 {

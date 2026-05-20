@@ -7,6 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
+  cfg = config.homelab.cert-manager;
   kubelib = inputs.kube-generators.lib { inherit pkgs; };
   charts = inputs.nixhelm.charts { inherit pkgs; };
   webhook = pkgs.buildGo126Module rec {
@@ -50,7 +51,7 @@ let
   };
 in
 {
-  options.homelab.cluster = {
+  options.homelab.cert-manager = {
     acme-staging-issuer.webhook-config = lib.mkOption {
       description = "LibDNS webhook configuration for the ACME staging issuer";
       type = libdnsWebhookConfig;
@@ -171,10 +172,10 @@ in
                   groupName = "cluster.local";
                   solverName = "libdns";
                   config = {
-                    provider = ccfg.acme-staging-issuer.webhook-config.provider;
+                    provider = cfg.acme-staging-issuer.webhook-config.provider;
                     secretRef = {
                       namespace = "cert-manager";
-                      name = ccfg.acme-staging-issuer.webhook-config.secretName;
+                      name = cfg.acme-staging-issuer.webhook-config.secretName;
                     };
                   };
                 };
@@ -195,10 +196,10 @@ in
                   groupName = "cluster.local";
                   solverName = "libdns";
                   config = {
-                    provider = ccfg.acme-production-issuer.webhook-config.provider;
+                    provider = cfg.acme-production-issuer.webhook-config.provider;
                     secretRef = {
                       namespace = "cert-manager";
-                      name = ccfg.acme-production-issuer.webhook-config.secretName;
+                      name = cfg.acme-production-issuer.webhook-config.secretName;
                     };
                   };
                 };
@@ -276,8 +277,8 @@ in
               apiGroups = [ "" ];
               resources = [ "secrets" ];
               resourceNames = [
-                ccfg.acme-staging-issuer.webhook-config.secretName
-                ccfg.acme-production-issuer.webhook-config.secretName
+                cfg.acme-staging-issuer.webhook-config.secretName
+                cfg.acme-production-issuer.webhook-config.secretName
               ];
               verbs = [
                 "get"

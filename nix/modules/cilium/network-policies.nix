@@ -1,22 +1,17 @@
-{ ... }:
 {
   lib,
+  config,
   ...
 }:
+let
+  cfg = config.homelab.cilium.network-policies;
+in
 {
-  options.homelab.cluster = {
-    localLANCIDR4 = lib.mkOption {
-      description = "IPv4 CIDR of the local LAN";
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-    };
-    localLANCIDR6 = lib.mkOption {
-      description = "IPv6 CIDR of the local LAN";
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-    };
+  options.homelab.cilium.network-policies = {
+    enable = lib.mkEnableOption "Cilium clusterwide network policies";
   };
   config = {
+    services.k3s.manifests.networkpolicies.enable = cfg.enable;
     kubetree.resources.networkpolicies = {
       deny-all = {
         apiVersion = "cilium.io/v2";

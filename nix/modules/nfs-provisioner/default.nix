@@ -27,7 +27,7 @@ in
     pathPattern = lib.mkOption {
       description = "Naming scheme for volumes on the NFS server";
       type = lib.types.str;
-      default = "\${.PVC.name}";
+      default = "\${.PVC.namespace}-\${.PVC.name}";
     };
     mountpointOwnership = {
       mode = lib.mkOption {

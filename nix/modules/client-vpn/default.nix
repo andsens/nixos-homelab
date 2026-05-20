@@ -1,4 +1,4 @@
-{ self, ... }:
+{ inputs, self, ... }:
 {
   pkgs,
   lib,
@@ -110,6 +110,7 @@ in
       );
     };
   };
+  imports = [ inputs.setup-secrets.nixosModules.default ];
   config = lib.mkIf cfg.enable {
     services.k3s.images = [ image ];
     setup-secrets = {

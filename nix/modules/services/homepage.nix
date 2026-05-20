@@ -1,4 +1,4 @@
-{ ... }@moduleArgs:
+{ self, inputs, ... }:
 {
   pkgs,
   lib,
@@ -73,7 +73,7 @@ in
       default = { };
     };
   };
-  imports = map (path: import path moduleArgs) [
+  imports = map (path: self.lib.parts.importApply path { inherit self inputs; }) [
     ./homepage-integrations/flood.nix
     ./homepage-integrations/ghostfolio.nix
     ./homepage-integrations/grafana.nix

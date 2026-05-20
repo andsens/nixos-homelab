@@ -8,8 +8,11 @@ let
   ccfg = config.homelab.cluster;
 in
 {
+  options.homelab.k8sss = {
+    enable = lib.mkEnableOption "k8sss";
+  };
   imports = [ inputs.k8sss.nixosModules.default ];
-  config = {
+  config = lib.mkIf config.homelab.k8sss.enable {
     k8sss.enable = true;
     k8sss.dnsNames = [ "${config.networking.hostName}.${ccfg.DOMAIN}" ];
     kubetree.resources.k8sss = lib.mkIf config.k8sss.enable {

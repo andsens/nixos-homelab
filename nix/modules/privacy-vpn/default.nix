@@ -1,4 +1,4 @@
-{ self, ... }:
+{ inputs, self, ... }:
 {
   lib,
   pkgs,
@@ -36,6 +36,7 @@ in
       type = lib.types.nullOr lib.types.str;
     };
   };
+  imports = [ inputs.setup-secrets.nixosModules.default ];
   config = lib.mkIf cfg.enable {
     kubetree.resources = {
       vpn-egress.privacy-vpn = {
