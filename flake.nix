@@ -15,6 +15,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
+    k8sss = {
+      url = "github:andsens/k8sss";
+      inputs.systems.follows = "systems";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.kubetree.follows = "kubetree";
+      inputs.flake-parts.follows = "flake-parts";
+    };
     nixhelm = {
       url = "github:nix-community/nixhelm";
       inputs.nixpkgs.follows = "nixpkgs";

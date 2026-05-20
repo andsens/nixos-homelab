@@ -58,7 +58,52 @@
         "type": "github"
       }
     },
+    "k8sss": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "kube-generators": "kube-generators",
+        "kubetree": [
+          "kubetree"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": [
+          "systems"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779310003,
+        "narHash": "sha256-WcZV2EiYvExBR4/f03Wt8yABRFQFSvwuz6noRQdAt90=",
+        "owner": "andsens",
+        "repo": "k8sss",
+        "rev": "e0931d7d2fd90d423532d5eb03aa90f6eaa0f354",
+        "type": "github"
+      },
+      "original": {
+        "owner": "andsens",
+        "repo": "k8sss",
+        "type": "github"
+      }
+    },
     "kube-generators": {
+      "locked": {
+        "lastModified": 1762437901,
+        "narHash": "sha256-5yuJODagAq+aMXQAT2c0gfXKLqapmA6eUHR33jKNHuU=",
+        "owner": "farcaller",
+        "repo": "nix-kube-generators",
+        "rev": "810dcf792081790648ba9ae705b9a2286115ace8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "farcaller",
+        "repo": "nix-kube-generators",
+        "type": "github"
+      }
+    },
+    "kube-generators_2": {
       "locked": {
         "lastModified": 1762437901,
         "narHash": "sha256-5yuJODagAq+aMXQAT2c0gfXKLqapmA6eUHR33jKNHuU=",
@@ -222,7 +267,8 @@
     "root": {
       "inputs": {
         "flake-parts": "flake-parts",
-        "kube-generators": "kube-generators",
+        "k8sss": "k8sss",
+        "kube-generators": "kube-generators_2",
         "kubetree": "kubetree",
         "nixhelm": "nixhelm",
         "nixpkgs": "nixpkgs",

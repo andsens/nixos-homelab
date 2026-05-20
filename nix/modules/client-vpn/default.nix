@@ -48,7 +48,7 @@ in
       type = lib.types.str;
     };
     groups = lib.mkOption {
-      description = "VPN client access groups, indexed by group name. Each group is a wireguard endpoint, the private key must be placed at /etc/secrets.d/<name>-vpn.key on the host";
+      description = "VPN client access groups, indexed by group name. Each group is a wireguard endpoint.";
       type = lib.types.attrsOf (
         lib.types.submodule (
           {
@@ -131,7 +131,7 @@ in
             kubectl create secret generic -n client-vpn --dry-run=client -oyaml client-vpn-private-keys \
               ${
                 lib.join "\\ \n" (
-                  map (group: "--from-literal=${group}='''$CLIENT_VPN_${group}'") (builtins.attrNames cfg.groups)
+                  map (group: ''--from-literal=${group}="$CLIENT_VPN_${group}"'') (builtins.attrNames cfg.groups)
                 )
               } \
               -oyaml | \
