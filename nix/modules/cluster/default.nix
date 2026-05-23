@@ -11,7 +11,7 @@ let
   ipv4 = self.lib.ip.v4;
   kubelib = inputs.kube-generators.lib { inherit pkgs; };
   k3sConfig = kubelib.toYAMLFile ({
-    data-dir = "${ccfg.dataPath}/k3s";
+    data-dir = ccfg.dataDir;
     flannel-backend = "none";
     egress-selector-mode = "disabled";
     disable-network-policy = true;
@@ -87,7 +87,7 @@ in
       description = "The ACME provider that Ingresses should use for obtaining TLS certs";
       type = lib.types.str;
     };
-    dataPath = lib.mkOption {
+    dataDir = lib.mkOption {
       description = "Path for services whose data should persist across cluster iterations (hostPath mount)";
       type = lib.types.str;
     };
@@ -124,14 +124,14 @@ in
       (pkgs.writeShellScriptBin "cilium" ''KUBECONFIG=/etc/rancher/k3s/k3s.yaml exec ${lib.getExe pkgs.cilium-cli} "$@"'')
     ];
     homelab.cluster.backup.hostPaths = [
-      "${ccfg.dataPath}/k3s/server/token"
-      "${ccfg.dataPath}/k3s/server/db"
+      "${ccfg.dataDir}/server/token"
+      "${ccfg.dataDir}/server/db"
     ];
     systemd.tmpfiles.settings."50-k3s-data"."/var/lib/rancher/k3s"."L+" = {
       user = "root";
       group = "root";
       mode = "0755";
-      argument = "${ccfg.dataPath}/k3s";
+      argument = ccfg.dataDir;
     };
     systemd.globalEnvironment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
     # https://github.com/cilium/cilium/issues/31565#issuecomment-3419710315

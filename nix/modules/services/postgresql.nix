@@ -22,12 +22,6 @@ in
           { name, ... }@module:
           {
             options = {
-              namespace = lib.mkOption {
-                description = "Namespace the creation and backup job should run in";
-                type = lib.types.nullOr lib.types.str;
-                defaultText = "`<serviceName>`";
-                default = name;
-              };
               dbName = lib.mkOption {
                 description = "Name of the database";
                 type = lib.types.nullOr lib.types.str;
@@ -109,7 +103,7 @@ in
           value = {
             apiVersion = "batch/v1";
             kind = "Job";
-            metadata.namespace = spec.namespace;
+            metadata.namespace = "postgresql";
             metadata.name = jobName;
             metadata.labels."app.kubernetes.io/name" = jobName;
             spec.template = {
@@ -156,7 +150,7 @@ in
           value = {
             apiVersion = "batch/v1";
             kind = "CronJob";
-            metadata.namespace = spec.namespace;
+            metadata.namespace = "postgresql";
             metadata.name = jobName;
             metadata.labels."app.kubernetes.io/name" = jobName;
             spec.schedule = spec.backup.schedule;

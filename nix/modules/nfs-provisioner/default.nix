@@ -21,8 +21,6 @@ in
     path = lib.mkOption {
       description = "Export on the NFS server to use as the root";
       type = lib.types.str;
-      defaultText = "\${config.homelab.cluster.dataPath}";
-      default = config.homelab.cluster.dataPath;
     };
     pathPattern = lib.mkOption {
       description = "Naming scheme for volumes on the NFS server";
