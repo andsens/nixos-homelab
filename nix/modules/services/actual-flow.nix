@@ -49,13 +49,6 @@ let
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
     ];
-    runAsRoot = ''
-      #!${pkgs.runtimeShell}
-      ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 900 actual-flow
-      useradd -r -u 900 -g actual-flow -d /data actual-flow
-    '';
-    config.User = "900:900";
     config.Entrypoint = [
       (pkgs.lib.getExe nodejs)
       "/dist/index.js"
@@ -196,9 +189,7 @@ in
                   jq --arg key "$LUNCHFLOW_API_KEY" '.lunchFlow.apiKey = $key' /config/config.json >/config-tmp/config.json
                 ''
               ];
-              securityContext = {
-                runAsUser = config.kubetree.service-macros.runAsUser;
-                runAsGroup = config.kubetree.service-macros.runAsGroup;
+              securityContext = config.kubetree.service-macros.securityContext // {
                 allowPrivilegeEscalation = false;
                 readOnlyRootFilesystem = true;
                 capabilities.drop = [ "ALL" ];

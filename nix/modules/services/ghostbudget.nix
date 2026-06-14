@@ -46,13 +46,6 @@ let
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
     ];
-    runAsRoot = ''
-      #!${pkgs.runtimeShell}
-      ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 900 ghostbudget
-      useradd -r -u 900 -g ghostbudget ghostbudget
-    '';
-    config.User = "900:900";
     config.Entrypoint = [
       (pkgs.lib.getExe nodejs)
       "/src/index.js"

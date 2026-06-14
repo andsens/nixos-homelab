@@ -26,12 +26,11 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 900 plex
-      useradd -r -u 900 -g plex -d /var/lib/plex plex
+      groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} plex
+      useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g plex -d / plex
       # https://github.com/NixOS/nixpkgs/blob/3f40c4f8c496308680d71d9e17bce452928a2e17/pkgs/servers/plex/default.nix#L57
       cat "${pkgs.plexRaw.basedb}" >/db
     '';
-    config.User = "900:900";
     config.Entrypoint = [
       "${pkgs.plexRaw}/lib/plexmediaserver/Plex Media Server"
     ];
@@ -58,10 +57,10 @@ in
       description = "Plex API Key";
       cmd = self.lib.setup-secrets.mkScript pkgs ''
         kubectl exec -n plex -c plex deploy/plex -- \
-          xq -x '//Preferences/@PlexOnlineToken' "/var/lib/plex/Library/Application Support/Plex Media Server/Preferences.xml"
+          xq -x '//Preferences/@PlexOnlineToken' "/Library/Application Support/Plex Media Server/Preferences.xml"
       '';
     };
-    homelab.cluster.backup.volumes.plex.plex = [ "/Library/Application Support/Plex Media Server" ];
+    homelab.cluster.backup.volumes.plex.plex = [ "/Application Support/Plex Media Server" ];
     services.k3s.images = [ image ];
     kubetree.resources.plex = {
       netpol = {
@@ -142,16 +141,16 @@ in
         metadata.name = "plex";
         spec = {
           allowEgress = [ "internet" ];
-          dataPath = "/var/lib/plex";
+          dataPath = "/Library";
           servicePodSpec = {
             initContainersByName.rm-lock = {
               image = "${flakePkgs.container-utils.buildArgs.name}:${flakePkgs.container-utils.imageTag}";
               imagePullPolicy = "Never";
               args = [
-                ''rm -f "/var/lib/plex/Library/Application Support/Plex Media Server/plexmediaserver.pid"''
+                ''rm -f "/Library/Application Support/Plex Media Server/plexmediaserver.pid"''
               ];
               securityContext.readOnlyRootFilesystem = true;
-              volumeMountsByPath."/var/lib/plex" = "data";
+              volumeMountsByPath."/Library" = "data";
             };
             mainContainer = {
               image = "${image.buildArgs.name}:${image.imageTag}";

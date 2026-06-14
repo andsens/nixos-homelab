@@ -165,7 +165,12 @@ rec {
         spec =
           lib.recursiveUpdate
             {
-              securityContext.fsGroup = cfg.service-macros.runAsGroup;
+              securityContext = {
+                runAsUser = cfg.service-macros.securityContext.runAsUser;
+                runAsGroup = cfg.service-macros.securityContext.runAsGroup;
+                supplementalGroups = cfg.service-macros.securityContext.supplementalGroups;
+                fsGroup = cfg.service-macros.securityContext.runAsGroup;
+              };
               containersByName = {
                 "${name}" =
                   lib.recursiveUpdate
@@ -174,16 +179,12 @@ rec {
                       securityContext = {
                         allowPrivilegeEscalation = false;
                         readOnlyRootFilesystem = true;
-                        runAsUser = cfg.service-macros.runAsUser;
-                        runAsGroup = cfg.service-macros.runAsGroup;
-                        capabilities = {
-                          add =
-                            (dotPath "servicePodSpec.mainContainer.addCapabilities" [ ])
-                            ++ lib.optional (
-                              length (attrNames (dotPath "servicePodSpec.mainContainer.portsByName" { })) > 0
-                            ) "NET_BIND_SERVICE";
-                          drop = [ "ALL" ];
-                        };
+                        capabilities.add =
+                          (dotPath "servicePodSpec.mainContainer.addCapabilities" [ ])
+                          ++ lib.optional (
+                            length (attrNames (dotPath "servicePodSpec.mainContainer.portsByName" { })) > 0
+                          ) "NET_BIND_SERVICE";
+                        capabilities.drop = [ "ALL" ];
                       };
                       volumeMountsByPath = dotPath "servicePodSpec.mainContainer.volumeMountsByPath" { };
                     }

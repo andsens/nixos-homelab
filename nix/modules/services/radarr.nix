@@ -25,11 +25,9 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 100 users
-      groupadd -r -g 900 radarr
-      useradd -r -u 900 -g radarr -G users -d /data radarr
+      groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} radarr
+      useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g radarr -d /data radarr
     '';
-    config.User = "900:900";
     config.Entrypoint = [
       (pkgs.lib.getExe pkgs.radarr)
     ];
@@ -70,6 +68,7 @@ in
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
             args = [ "-data=/data" ];
+            workingDir = "/data";
             # securityContext.supplementalGroups = [ 100 ];
             addCapabilities = [ "CHOWN" ];
             envByName.RADARR__AUTH__ENABLED = "false";

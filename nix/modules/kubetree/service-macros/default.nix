@@ -22,15 +22,22 @@ in
       description = "The ACME provider that Ingresses should use for obtaining TLS certs";
       type = lib.types.str;
     };
-    runAsUser = lib.mkOption {
-      description = "UID for pods to run as";
-      type = lib.types.int;
-      default = 1000;
-    };
-    runAsGroup = lib.mkOption {
-      description = "GID for pods to run with, also sets securityContext.fsGroup";
-      type = lib.types.int;
-      default = 1000;
+    securityContext = {
+      runAsUser = lib.mkOption {
+        description = "UID for pods to run as";
+        type = lib.types.int;
+        default = 1000;
+      };
+      runAsGroup = lib.mkOption {
+        description = "GID for pods to run with, also sets securityContext.fsGroup";
+        type = lib.types.int;
+        default = 1000;
+      };
+      supplementalGroups = lib.mkOption {
+        description = "Additional GIDs to apply to the pods";
+        type = lib.types.listOf lib.types.int;
+        default = [ 100 ];
+      };
     };
   };
   config = {

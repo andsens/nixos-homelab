@@ -25,13 +25,10 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 900 prowlarr
-      useradd -r -u 900 -g prowlarr -d /data prowlarr
+      groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} prowlarr
+      useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g prowlarr -d /data prowlarr
     '';
-    config.User = "900:900";
-    config.Entrypoint = [
-      (pkgs.lib.getExe pkgs.prowlarr)
-    ];
+    config.Entrypoint = [ (pkgs.lib.getExe pkgs.prowlarr) ];
   };
 in
 {
@@ -64,6 +61,7 @@ in
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
             args = [ "-data=/data" ];
+            workingDir = "/data";
             envByName.PROWLARR__AUTH__ENABLED = "false";
             envByName.PROWLARR__AUTH__METHOD = "External";
             envByName.PROWLARR__APP__LAUNCHBROWSER = "false";

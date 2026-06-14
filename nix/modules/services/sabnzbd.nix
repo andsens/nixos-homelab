@@ -25,14 +25,10 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 100 users
-      groupadd -r -g 900 sabnzbd
-      useradd -r -u 900 -g sabnzbd -G users -d "/data" sabnzbd
+      groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} sabnzbd
+      useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g sabnzbd -d /data sabnzbd
     '';
-    config.User = "900:900";
-    config.Entrypoint = [
-      (pkgs.lib.getExe pkgs.sabnzbd)
-    ];
+    config.Entrypoint = [ (pkgs.lib.getExe pkgs.sabnzbd) ];
   };
 in
 {
@@ -106,6 +102,7 @@ in
                 "--config-file"
                 "/data/sabnzbd.ini"
               ];
+              workingDir = "/data";
               portsByName.web = 8080;
               livenessProbe.httpGet.port = "web";
               readinessProbe.httpGet.port = "web";

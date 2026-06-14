@@ -25,14 +25,10 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g 100 users
-      groupadd -r -g 900 sonarr
-      useradd -r -u 900 -g sonarr -G users -d /data sonarr
+      groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} sonarr
+      useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g sonarr -d /data sonarr
     '';
-    config.User = "900:900";
-    config.Entrypoint = [
-      (pkgs.lib.getExe pkgs.sonarr)
-    ];
+    config.Entrypoint = [ (pkgs.lib.getExe pkgs.sonarr) ];
   };
 in
 {
@@ -75,7 +71,7 @@ in
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
             args = [ "-data=/data" ];
-            # securityContext.supplementalGroups = [ 100 ];
+            workingDir = "/data";
             addCapabilities = [ "CHOWN" ];
             envByName.SONARR__AUTH__ENABLED = "false";
             envByName.SONARR__AUTH__METHOD = "External";
