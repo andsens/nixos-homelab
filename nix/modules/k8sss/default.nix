@@ -14,7 +14,7 @@ in
   imports = [ inputs.k8sss.nixosModules.default ];
   config = lib.mkIf config.homelab.k8sss.enable {
     k8sss.enable = true;
-    k8sss.dnsNames = [ "${config.networking.hostName}.${ccfg.DOMAIN}" ];
+    k8sss.dnsNames = [ "${config.networking.hostName}.${ccfg.domain}" ];
     kubetree.resources.k8sss = lib.mkIf config.k8sss.enable {
       netpols = {
         apiVersion = "cluster.local";
