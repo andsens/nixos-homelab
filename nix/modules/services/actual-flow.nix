@@ -131,7 +131,7 @@ in
         {
           logPrefix = "Actualbudget (LUNCHFLOW_API_KEY)";
           requires = [ "LUNCHFLOW_API_KEY" ];
-          cmd = self.lib.setup-secrets.mkScript pkgs "setKubeSecret actualbudget lunchflow-api-key LUNCHFLOW_API_KEY LUNCHFLOW_API_KEY";
+          cmd = self.lib.setup-secrets.mkScript pkgs ''setKubeSecret actualbudget lunchflow-api-key LUNCHFLOW_API_KEY "$LUNCHFLOW_API_KEY"'';
         }
       ];
     };
