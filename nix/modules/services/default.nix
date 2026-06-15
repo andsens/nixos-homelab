@@ -30,7 +30,4 @@
     ./sonarr.nix
     ./zfs-exporter.nix
   ];
-  config = {
-    homelab.cluster.backup.hostPaths = [ "services" ];
-  };
 }

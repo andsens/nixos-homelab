@@ -62,7 +62,7 @@ in
   };
   config = lib.mkIf cfg.enable {
     homelab.cluster.backup.volumes.postgresql.database-dumps = lib.mapAttrsToList (
-      serviceName: spec: "/dumps/${spec.dbName}.pgdump"
+      serviceName: spec: "/${spec.dbName}.pgdump"
     ) dbBackups;
 
     kubetree.resources.postgresql = {
