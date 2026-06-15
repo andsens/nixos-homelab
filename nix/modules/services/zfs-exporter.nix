@@ -14,7 +14,7 @@ let
       pkgs.prometheus-zfs-exporter
       pkgs.zfs
     ]
-    ++ ccfg.debugTools;
+    ++ lib.optionals cfg.debug ccfg.debugTools;
     config.User = "0:0";
     config.Entrypoint = [
       (pkgs.lib.getExe pkgs.prometheus-zfs-exporter)
@@ -24,6 +24,7 @@ in
 {
   options.homelab.services.zfs-exporter = {
     enable = lib.mkEnableOption "zfs-exporter";
+    debug = lib.mkEnableOption "debug mode";
   };
   config = lib.mkIf cfg.enable {
     services.k3s.images = [ image ];

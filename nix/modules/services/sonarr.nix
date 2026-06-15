@@ -17,7 +17,7 @@ let
         cacert
         xq-xml # for extracting the API token
       ]
-      ++ ccfg.debugTools;
+      ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -34,6 +34,7 @@ in
 {
   options.homelab.services.sonarr = {
     enable = lib.mkEnableOption "sonarr";
+    debug = lib.mkEnableOption "debug mode";
     mountPaths = lib.mkOption {
       description = "Paths from the host to mirror into the container";
       type = lib.types.listOf lib.types.path;

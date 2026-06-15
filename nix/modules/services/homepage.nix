@@ -22,7 +22,7 @@ let
       os = "linux";
       arch = "x86_64";
     };
-    copyToRoot = [ pkgs.bash ] ++ ccfg.debugTools;
+    copyToRoot = [ pkgs.bash ] ++ lib.optionals cfg.debug ccfg.debugTools;
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       cp -r /app/.next/server/pages /app/.next/server/pages-template
@@ -52,6 +52,7 @@ in
 {
   options.homelab.services.homepage = {
     enable = lib.mkEnableOption "homepage";
+    debug = lib.mkEnableOption "debug mode";
     allowEgress = lib.mkOption {
       description = "Which services homepage should be allowed access to";
       type = lib.types.listOf lib.types.str;

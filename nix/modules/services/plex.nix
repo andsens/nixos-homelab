@@ -18,7 +18,7 @@ let
         cacert
         xq-xml # for extracting the API token
       ]
-      ++ ccfg.debugTools;
+      ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -41,6 +41,7 @@ in
     # Run `kubectl port-forward -n plex plex-... 32400` after startup to set it up
     # The setup procedure is only enabled when accessing the server via localhost:32400/web
     enable = lib.mkEnableOption "Plex Media Server";
+    debug = lib.mkEnableOption "debug mode";
     reservedIPs = lib.mkOption {
       description = "Reserved IPs for the Plex loadbalancer";
       type = lib.types.listOf lib.types.str;

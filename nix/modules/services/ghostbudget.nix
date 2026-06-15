@@ -41,7 +41,7 @@ let
       nodejs
       ghostbudget
     ]
-    ++ ccfg.debugTools;
+    ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -54,6 +54,7 @@ let
 in
 {
   options.homelab.services.ghostfolio = {
+    debug = lib.mkEnableOption "debug mode";
     importSchedule = lib.mkOption {
       description = "Cronjob notation of when the ghostbudget sync runs";
       type = lib.types.nullOr lib.types.str;

@@ -31,7 +31,7 @@ let
       webhook
       pkgs.cacert
     ]
-    ++ ccfg.debugTools;
+    ++ lib.optionals cfg.debug ccfg.debugTools;
     config.User = "1001:1001";
     config.Entrypoint = [
       (pkgs.lib.getExe webhook)
@@ -52,6 +52,7 @@ let
 in
 {
   options.homelab.cert-manager = {
+    debug = lib.mkEnableOption "debug mode";
     acme-staging-issuer.webhook-config = lib.mkOption {
       description = "LibDNS webhook configuration for the ACME staging issuer";
       type = libdnsWebhookConfig;

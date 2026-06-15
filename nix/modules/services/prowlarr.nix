@@ -17,7 +17,7 @@ let
         cacert
         xq-xml # for extracting the API token
       ]
-      ++ ccfg.debugTools;
+      ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -34,6 +34,7 @@ in
 {
   options.homelab.services.prowlarr = {
     enable = lib.mkEnableOption "prowlarr";
+    debug = lib.mkEnableOption "debug mode";
   };
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.PROWLARR_API_KEY = {

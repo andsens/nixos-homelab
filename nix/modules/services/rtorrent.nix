@@ -8,6 +8,7 @@
 {
   options.homelab.services.rtorrent = {
     enable = lib.mkEnableOption "rtorrent";
+    debug = lib.mkEnableOption "debug mode";
     downloadsVolume = lib.mkOption {
       description = "Volume source (as specificed on the pod spec) to place downloads in";
       type = lib.types.attrsOf lib.types.anything;
@@ -65,7 +66,7 @@
           pkgs.bash
           pkgs.coreutils
         ]
-        ++ ccfg.debugTools;
+        ++ lib.optionals cfg.debug ccfg.debugTools;
         config.Env = [
           "RTORRENT_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
           "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"

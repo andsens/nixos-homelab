@@ -14,7 +14,7 @@ let
       pkgs.flood
       pkgs.mediainfo
     ]
-    ++ ccfg.debugTools;
+    ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Entrypoint = [
       (pkgs.lib.getExe pkgs.flood)
     ];
@@ -23,6 +23,7 @@ in
 {
   options.homelab.services.flood = {
     enable = lib.mkEnableOption "flood";
+    debug = lib.mkEnableOption "debug mode";
   };
   config = lib.mkIf cfg.enable {
     assertions = [

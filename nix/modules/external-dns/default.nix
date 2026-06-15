@@ -6,6 +6,7 @@
   ...
 }:
 let
+  cfg = config.homelab.cluster.external-dns;
   ccfg = config.homelab.cluster;
   external-dns = pkgs.buildGo126Module rec {
     name = "external-dns";
@@ -24,7 +25,7 @@ let
   };
   externalDNSImage = pkgs.dockerTools.buildImage {
     name = "cluster.local/${external-dns.name}";
-    copyToRoot = [ external-dns ] ++ ccfg.debugTools;
+    copyToRoot = [ external-dns ] ++ lib.optionals cfg.debug ccfg.debugTools;
     config.User = "65534:65534";
     config.Entrypoint = [
       (pkgs.lib.getExe external-dns)
@@ -33,11 +34,7 @@ let
 in
 {
   options.homelab.cluster.external-dns = {
-    deploymentOverlay = lib.mkOption {
-      description = "Strategic merge overlay for external-dns deployment";
-      type = lib.types.anything;
-      default = { };
-    };
+    debug = lib.mkEnableOption "debug mode";
   };
   config = {
     services.k3s.images = [ externalDNSImage ];

@@ -17,7 +17,7 @@ let
         cacert
         xq-xml # for extracting the API token
       ]
-      ++ ccfg.debugTools;
+      ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -28,14 +28,13 @@ let
       groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} radarr
       useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g radarr -d /data radarr
     '';
-    config.Entrypoint = [
-      (pkgs.lib.getExe pkgs.radarr)
-    ];
+    config.Entrypoint = [ (pkgs.lib.getExe pkgs.radarr) ];
   };
 in
 {
   options.homelab.services.radarr = {
     enable = lib.mkEnableOption "radarr";
+    debug = lib.mkEnableOption "debug mode";
     volumes = lib.mkOption {
       description = "Volumes to mount into the container expressed as a map of mountpath to volume source (as specificed on the pod spec). rtorrent & usenet download volumes are added automatically.";
       type = lib.types.attrsOf lib.types.anything;

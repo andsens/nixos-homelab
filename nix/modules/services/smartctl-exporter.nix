@@ -27,7 +27,7 @@ let
       smartctlExporter
       pkgs.smartmontools
     ]
-    ++ ccfg.debugTools;
+    ++ lib.optionals cfg.debug ccfg.debugTools;
     config.User = "0:0";
     config.Entrypoint = [
       (pkgs.lib.getExe smartctlExporter)
@@ -37,6 +37,7 @@ in
 {
   options.homelab.services.smartctl-exporter = {
     enable = lib.mkEnableOption "smartctl-exporter";
+    debug = lib.mkEnableOption "debug mode";
   };
   config = lib.mkIf cfg.enable {
     services.k3s.images = [ image ];

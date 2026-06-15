@@ -28,7 +28,7 @@ let
       pkgs.wireguard-tools
       pkgs.coreutils # needed by wg-quick
     ]
-    ++ ccfg.debugTools;
+    ++ lib.optionals cfg.debug ccfg.debugTools;
     config.User = "0:0";
     config.Entrypoint = [
       (pkgs.lib.getExe upScript)
@@ -38,6 +38,7 @@ in
 {
   options.homelab.clientVPN = {
     enable = lib.mkEnableOption "the client VPN gateway";
+    debug = lib.mkEnableOption "debug mode";
     lbCidr4 = lib.mkOption {
       description = "IPv4 CIDR for the gateways";
       type = lib.types.str;

@@ -17,7 +17,7 @@ let
       pkgs.coreutils
       pkgs.gnugrep
     ]
-    ++ ccfg.debugTools;
+    ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
@@ -34,6 +34,7 @@ in
 {
   options.homelab.services.sabnzbd = {
     enable = lib.mkEnableOption "sabnzbd";
+    debug = lib.mkEnableOption "debug mode";
     downloadsVolume = lib.mkOption {
       description = "Volume source (as specificed on the pod spec) to place downloads in";
       type = lib.types.attrsOf lib.types.anything;
