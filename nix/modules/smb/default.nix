@@ -25,9 +25,6 @@ in
 
           "server min protocol" = "SMB3_11";
           "server smb encrypt" = "required";
-          "server smb3 encryption algorithms" = "AES-256-GCM";
-          "server smb3 signing algorithms" = "AES-128-GMAC";
-
           "client smb encrypt" = "required";
         };
       };
