@@ -50,6 +50,8 @@ let
     ));
 in
 {
+  # https://github.com/hercules-ci/flake-parts/pull/251
+  key = "${toString __curPos.file}#modules.nixos.services";
   options.homelab.services.homepage = {
     enable = lib.mkEnableOption "homepage";
     debug = lib.mkEnableOption "debug mode";
@@ -74,16 +76,19 @@ in
       default = { };
     };
   };
-  imports = map (path: self.lib.parts.importApply path { inherit self inputs; }) [
-    ./homepage-integrations/flood.nix
-    ./homepage-integrations/ghostfolio.nix
-    ./homepage-integrations/grafana.nix
-    ./homepage-integrations/plex.nix
-    ./homepage-integrations/prowlarr.nix
-    ./homepage-integrations/radarr.nix
-    ./homepage-integrations/sabnzbd.nix
-    ./homepage-integrations/sonarr.nix
+  imports = [
+    self.nixosModules.cluster
   ];
+  # imports = map (path: self.lib.parts.importApply path { inherit self inputs; }) [
+  #   ./homepage-integrations/flood.nix
+  #   ./homepage-integrations/ghostfolio.nix
+  #   ./homepage-integrations/grafana.nix
+  #   ./homepage-integrations/plex.nix
+  #   ./homepage-integrations/prowlarr.nix
+  #   ./homepage-integrations/radarr.nix
+  #   ./homepage-integrations/sabnzbd.nix
+  #   ./homepage-integrations/sonarr.nix
+  # ];
   config = lib.mkIf cfg.enable {
     homelab.services.homepage.services.Media = {
       sort = lib.mkDefault 50;

@@ -68,8 +68,10 @@
             };
             netutils = importApply ./nix/modules/netutils { inherit self inputs; };
             nfs-provisioner = importApply ./nix/modules/nfs-provisioner { inherit self inputs; };
+            postgresql = importApply ./nix/modules/postgresql { inherit self inputs; };
             privacy-vpn = importApply ./nix/modules/privacy-vpn { inherit self inputs; };
             services = importApply ./nix/modules/services { inherit self inputs; };
+            redis = importApply ./nix/modules/redis { inherit self inputs; };
             smb = importApply ./nix/modules/smb { inherit self inputs; };
           };
         };
