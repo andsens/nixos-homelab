@@ -76,19 +76,7 @@ in
       default = { };
     };
   };
-  imports = [
-    self.nixosModules.cluster
-  ];
-  # imports = map (path: self.lib.parts.importApply path { inherit self inputs; }) [
-  #   ./homepage-integrations/flood.nix
-  #   ./homepage-integrations/ghostfolio.nix
-  #   ./homepage-integrations/grafana.nix
-  #   ./homepage-integrations/plex.nix
-  #   ./homepage-integrations/prowlarr.nix
-  #   ./homepage-integrations/radarr.nix
-  #   ./homepage-integrations/sabnzbd.nix
-  #   ./homepage-integrations/sonarr.nix
-  # ];
+  imports = [ self.nixosModules.cluster ];
   config = lib.mkIf cfg.enable {
     homelab.services.homepage.services.Media = {
       sort = lib.mkDefault 50;

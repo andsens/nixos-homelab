@@ -1,4 +1,4 @@
-{ ... }:
+{ inputs, ... }:
 {
   lib,
   config,
@@ -9,6 +9,7 @@ let
   users = lib.filterAttrs (user: spec: spec.enable && spec.isNormalUser) config.users.users;
 in
 {
+  imports = [ inputs.setup-secrets.nixosModules.default ];
   config = {
     services.samba = {
       openFirewall = true;

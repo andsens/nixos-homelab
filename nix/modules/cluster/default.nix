@@ -105,6 +105,7 @@ in
     inputs.kubetree.nixosModules.default
     self.nixosModules.kubetree-cilium
     self.nixosModules.kubetree-service-macros
+    inputs.setup-secrets.nixosModules.default
   ];
   config = lib.mkIf ccfg.enable {
     systemd.services."setup-secrets".after = [ "k3s.service" ];

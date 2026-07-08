@@ -50,17 +50,18 @@
         systems = import systems;
         flake = {
           lib = {
-            parts = flake-parts-lib;
+            importsApply = map (path: importApply path { inherit self inputs; });
             ip = import ./nix/lib/ip.nix { inherit lib; };
             k8s = import ./nix/lib/k8s.nix { inherit lib; };
             setup-secrets = import ./nix/lib/setup-secrets.nix { inherit lib; };
           };
           nixosModules = {
-            client-vpn = importApply ./nix/modules/client-vpn { inherit self inputs; };
             cert-manager = importApply ./nix/modules/cert-manager { inherit self inputs; };
             cilium = importApply ./nix/modules/cilium { inherit self inputs; };
+            client-vpn = importApply ./nix/modules/client-vpn { inherit self inputs; };
             cluster = importApply ./nix/modules/cluster { inherit self inputs; };
             external-dns = importApply ./nix/modules/external-dns { inherit self inputs; };
+            homepage = importApply ./nix/modules/homepage { inherit self inputs; };
             k8sss = importApply ./nix/modules/k8sss { inherit self inputs; };
             kubetree-cilium = importApply ./nix/modules/kubetree/cilium { inherit self inputs; };
             kubetree-service-macros = importApply ./nix/modules/kubetree/service-macros {
@@ -70,7 +71,6 @@
             nfs-provisioner = importApply ./nix/modules/nfs-provisioner { inherit self inputs; };
             postgresql = importApply ./nix/modules/postgresql { inherit self inputs; };
             privacy-vpn = importApply ./nix/modules/privacy-vpn { inherit self inputs; };
-            services = importApply ./nix/modules/services { inherit self inputs; };
             redis = importApply ./nix/modules/redis { inherit self inputs; };
             smb = importApply ./nix/modules/smb { inherit self inputs; };
           };

@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, self, ... }:
 {
   config,
   lib,
@@ -35,7 +35,7 @@ in
       default = { };
     };
   };
-  imports = [
+  imports = self.lib.importsApply [
     ./bgp.nix
     ./cidr-groups.nix
     ./firewall.nix
