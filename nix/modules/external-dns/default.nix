@@ -31,13 +31,41 @@ let
       (pkgs.lib.getExe external-dns)
     ];
   };
+  webhook = pkgs.buildGo126Module rec {
+    name = "external-dns-libdns-webhook";
+    version = "0.4.0";
+    meta.mainProgram = "external-dns-libdns-webhook";
+    src = pkgs.fetchFromGitHub {
+      owner = "orbit-online";
+      repo = name;
+      rev = "1d119f3d687c18fcccd5fe34793024992aa89510";
+      hash = "sha256-pxu16Ri1agvhbBiog+lCvTlN2SbnaMQZ+YCJXR63Oo0=";
+    };
+    proxyVendor = true;
+    vendorHash = "sha256-gcRQRHOjFpT64Qm95FbwnF3jDdzigiiCsMlWu7ooeZw=";
+  };
+  webhookImage = pkgs.dockerTools.buildImage {
+    name = "cluster.local/${webhook.name}";
+    copyToRoot = [
+      webhook
+      pkgs.cacert
+    ]
+    ++ lib.optionals cfg.debug ccfg.debugTools;
+    config.User = "1001:1001";
+    config.Entrypoint = [
+      (pkgs.lib.getExe webhook)
+    ];
+  };
 in
 {
   options.homelab.cluster.external-dns = {
     debug = lib.mkEnableOption "debug mode";
   };
   config = {
-    services.k3s.images = [ externalDNSImage ];
+    services.k3s.images = [
+      externalDNSImage
+      webhookImage
+    ];
     services.k3s.manifests = {
       dnsendpoint.source = pkgs.fetchurl {
         url = "https://raw.githubusercontent.com/kubernetes-sigs/external-dns/refs/tags/v0.20.0/charts/external-dns/crds/dnsendpoints.externaldns.k8s.io.yaml";
@@ -139,7 +167,8 @@ in
             };
             containersByName.external-dns-libdns-webhook = {
               name = "external-dns-libdns-webhook";
-              image = "ghcr.io/orbit-online/external-dns-libdns-webhook:0.3.0";
+              image = "${webhookImage.buildArgs.name}:${webhookImage.imageTag}";
+              imagePullPolicy = "Never";
               securityContext = {
                 runAsGroup = 65534;
                 runAsUser = 65534;
