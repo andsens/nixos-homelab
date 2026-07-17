@@ -5,6 +5,7 @@ let
   cilium = import ./lib.nix { inherit lib; };
 in
 {
+  key = "${toString __curPos.file}#modules.nixos.kubetree-cilium";
   options.kubetree.cilium = {
     enable = lib.mkEnableOption "Cilium CRD transformers";
   };

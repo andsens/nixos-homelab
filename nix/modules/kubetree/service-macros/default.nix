@@ -10,6 +10,7 @@ let
   sm = import ./lib.nix { inherit lib; };
 in
 {
+  key = "${toString __curPos.file}#modules.nixos.kubetree-service-macros";
   options.kubetree.service-macros = {
     enable = lib.mkEnableOption "service macro transformers";
     domain = lib.mkOption {
