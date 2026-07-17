@@ -12,16 +12,16 @@ let
   charts = inputs.nixhelm.charts { inherit pkgs; };
   webhook = pkgs.buildGo126Module rec {
     name = "cert-manager-webhook-libdns";
-    version = "0.7.0";
+    version = "1.1.1-inwx-fix";
     meta.mainProgram = "cert-manager-webhook-libdns";
     src = pkgs.fetchFromGitHub {
       owner = "andsens";
       repo = name;
-      rev = "774e7ccfdf1396ab94ad8b987f7758c875a99c4f";
-      hash = "sha256-YHAW3CCYbLJ0HFe7stQJVVVCuWx2I/fz5tD/gD2KCPI=";
+      rev = "822a5ddb8ee35358d040bab1cf6ef3246a18f6c0";
+      hash = "sha256-/7oY2Yt+YWcv6tY/vBOUiWr00hW9fIAsqtDs2wGQ9gk=";
     };
     proxyVendor = true;
-    vendorHash = "sha256-kQ8Le4CBOVPSgtDT/oL+h+qNKk5VqrcE1gu21OjLdjo=";
+    vendorHash = "sha256-8XsRK1BR/D2hv18Dko/T99tuFzHBWE07r6PF4CRoqkA=";
 
     doCheck = false; # Tests require kubebuilder running through `make test`
   };
