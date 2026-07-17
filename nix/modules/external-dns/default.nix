@@ -87,6 +87,8 @@ in
                 EXTERNAL_DNS_TXT_OWNER_ID = "homelab";
                 EXTERNAL_DNS_EVENTS = "1";
                 EXTERNAL_DNS_INTERVAL = "5m";
+                EXTERNAL_DNS_PROVIDER = "webhook";
+                EXTERNAL_DNS_MIN_TTL = "300s";
               };
               portsByName.metrics = 7979;
               livenessProbe.httpGet = {
@@ -122,6 +124,8 @@ in
                 EXTERNAL_DNS_TXT_OWNER_ID = "homelab-node-source";
                 EXTERNAL_DNS_EVENTS = "1";
                 EXTERNAL_DNS_INTERVAL = "5m";
+                EXTERNAL_DNS_PROVIDER = "webhook";
+                EXTERNAL_DNS_MIN_TTL = "300s";
               };
               portsByName.metrics-node = 7980;
               livenessProbe.httpGet = {
@@ -131,6 +135,31 @@ in
               readinessProbe.httpGet = {
                 path = "/healthz";
                 port = "metrics-node";
+              };
+            };
+            containersByName.external-dns-libdns-webhook = {
+              name = "external-dns-libdns-webhook";
+              image = "ghcr.io/orbit-online/external-dns-libdns-webhook:0.3.0";
+              securityContext = {
+                runAsGroup = 65534;
+                runAsUser = 65534;
+                allowPrivilegeEscalation = false;
+                readOnlyRootFilesystem = true;
+                capabilities.add = [ "NET_BIND_SERVICE" ];
+                capabilities.drop = [ "ALL" ];
+              };
+              envByName = {
+                LIBDNS_PROVIDER_ZONES = config.homelab.cluster.domain;
+                LIBDNS_WEBHOOK_LISTEN = ":8888";
+              };
+              portsByName.api = 8888;
+              livenessProbe.httpGet = {
+                path = "/healthz";
+                port = 8888;
+              };
+              readinessProbe.httpGet = {
+                path = "/healthz";
+                port = 8888;
               };
             };
           };
