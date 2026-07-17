@@ -8,6 +8,7 @@ let
   cfg = config.homelab.services.redis;
 in
 {
+  key = "${toString __curPos.file}#modules.nixos.redis";
   options.homelab.services.redis = {
     enable = lib.mkEnableOption "Redis";
     databases = lib.mkOption {
