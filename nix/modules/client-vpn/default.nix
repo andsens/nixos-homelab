@@ -39,14 +39,35 @@ in
   options.homelab.clientVPN = {
     enable = lib.mkEnableOption "the client VPN gateway";
     debug = lib.mkEnableOption "debug mode";
-    lbCidr4 = lib.mkOption {
-      description = "IPv4 CIDR for the gateways";
-      type = lib.types.str;
+    lbIpBlock4.cidr = lib.mkOption {
+      description = "IPv4 CIDR for the VPN gateways";
+      type = lib.types.nullOr lib.types.str;
       default = "10.45.0.0/16";
     };
-    lbCidr6 = lib.mkOption {
-      description = "IPv6 CIDR for the gateways";
+    lbIpBlock4.start = lib.mkOption {
+      description = "IPv4 Pool range start for the VPN gateways";
       type = lib.types.str;
+      default = "10.45.0.2";
+    };
+    lbIpBlock4.stop = lib.mkOption {
+      description = "IPv4 Pool range end for the VPN gateways";
+      type = lib.types.str;
+      default = "10.45.0.254";
+    };
+    lbIpBlock6.cidr = lib.mkOption {
+      description = "IPv6 CIDR for the VPN gateways";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+    };
+    lbIpBlock6.start = lib.mkOption {
+      description = "IPv6 Pool range start for the VPN gateways";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+    };
+    lbIpBlock6.stop = lib.mkOption {
+      description = "IPv6 Pool range end for the VPN gateways";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
     };
     groups = lib.mkOption {
       description = "VPN client access groups, indexed by group name. Each group is a wireguard endpoint.";
@@ -91,7 +112,8 @@ in
                 default =
                   let
                     allowedIPs =
-                      (lib.optional ccfg.enableIPv4 ccfg.lbCidr4) ++ (lib.optional ccfg.enableIPv6 ccfg.lbCidr6);
+                      (lib.optional ccfg.enableIPv4 ccfg.lbIpBlock4.cidr)
+                      ++ (lib.optional ccfg.enableIPv6 ccfg.lbIpBlock6.cidr);
                   in
                   pkgs.writeText "${name}.conf" ''
                     [Interface]
@@ -153,8 +175,18 @@ in
         kind = "CiliumLoadBalancerIPPool";
         metadata.name = "client-vpn";
         spec.blocks =
-          (lib.optional ccfg.enableIPv4 { cidr = cfg.lbCidr4; })
-          ++ (lib.optional ccfg.enableIPv6 { cidr = cfg.lbCidr6; });
+          (lib.optional ccfg.enableIPv4 (
+            if cfg.lbIpBlock4.start != null then
+              { inherit (cfg.lbIpBlock4) start stop; }
+            else
+              { inherit (cfg.lbIpBlock4) cidr; }
+          ))
+          ++ (lib.optional ccfg.enableIPv6 (
+            if cfg.lbIpBlock6.start != null then
+              { inherit (cfg.lbIpBlock6) start stop; }
+            else
+              { inherit (cfg.lbIpBlock6) cidr; }
+          ));
         spec.serviceSelector.matchLabels."app.kubernetes.io/name" = "client-vpn";
       };
       config = {

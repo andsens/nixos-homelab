@@ -38,6 +38,12 @@ in
   };
   imports = [ inputs.setup-secrets.nixosModules.default ];
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = config.homelab.cilium.masquerade.enable;
+        message = "In order to use the privacy VPN, masquerading must be enabled (homelab.cluster.masquerade.enable)";
+      }
+    ];
     kubetree.resources = {
       vpn-egress.privacy-vpn = {
         apiVersion = "cilium.io/v2";
@@ -52,16 +58,6 @@ in
           destinationCIDRs =
             lib.optional (cfg.clientIP4 != null) "0.0.0.0/0" ++ lib.optional (cfg.clientIP6 != null) "::/0";
         };
-      };
-      cidrgroups.privacy-vpn = {
-        apiVersion = "cilium.io/v2";
-        kind = "CiliumCIDRGroup";
-        metadata.name = "privacy-vpn";
-        spec.externalCIDRs =
-          lib.optional (cfg.gatewayIP4 != null) "${cfg.gatewayIP4}/32"
-          ++ lib.optional (cfg.gatewayIP6 != null) "${cfg.gatewayIP6}/128"
-          ++ lib.optional (cfg.clientIP4 != null) "${cfg.clientIP4}/32"
-          ++ lib.optional (cfg.clientIP6 != null) "${cfg.clientIP6}/128";
       };
     };
     networking.wireguard.interfaces.privacy-vpn = {

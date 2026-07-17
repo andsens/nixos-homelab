@@ -39,14 +39,6 @@ in
         spec.externalCIDRs =
           (lib.optional ccfg.enableIPv4 ccfg.svcCidr4) ++ (lib.optional ccfg.enableIPv6 ccfg.svcCidr6);
       };
-      load-balancers = {
-        apiVersion = "cilium.io/v2";
-        kind = "CiliumCIDRGroup";
-        metadata.name = "load-balancers";
-        spec.externalCIDRs =
-          (lib.optional ccfg.enableIPv4 config.homelab.cilium.lbCidr4)
-          ++ (lib.optional ccfg.enableIPv6 config.homelab.cilium.lbCidr6);
-      };
       local-lan = {
         apiVersion = "cilium.io/v2";
         kind = "CiliumCIDRGroup";
