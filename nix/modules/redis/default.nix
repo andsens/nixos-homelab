@@ -10,8 +10,44 @@ in
 {
   options.homelab.services.redis = {
     enable = lib.mkEnableOption "Redis";
+    databases = lib.mkOption {
+      description = "A map of symbolic names to redis db indices. Overlaps will cause an assertion failure.";
+      type = lib.types.attrsOf lib.types.str;
+    };
   };
   config = lib.mkIf cfg.enable {
+    assertions = with builtins; [
+      (
+        let
+          overlaps = lib.filterAttrs (idx: names: length names > 1) (
+            lib.zipAttrs (lib.mapAttrsToList (name: value: { ${value} = name; }) cfg.databases)
+          );
+        in
+        {
+          assertion = length (attrNames overlaps) == 0;
+          message = ''
+            homelab.services.redis.databases has overlaps in db indices.
+            ${lib.join "\n" (
+              lib.mapAttrsToList (idx: names: "The index ${idx} is used by: ${lib.join ", " names}") overlaps
+            )}
+          '';
+        }
+      )
+      (
+        let
+          nonInts = lib.filterAttrs (name: idx: toString (lib.toIntBase10 idx) != idx) cfg.databases;
+        in
+        {
+          assertion = length (attrNames nonInts) == 0;
+          message = ''
+            homelab.services.redis.databases contains non-integer strings as db indices.
+            ${lib.join "\n" (
+              lib.mapAttrsToList (name: idx: ''The index "${idx}" used by "${name}" is not valid.'') nonInts
+            )}
+          '';
+        }
+      )
+    ];
     homelab.cluster.backup.volumes.redis.redis = [ "/dump.rdb" ];
     kubetree.resources.redis = {
       service-macro = {
