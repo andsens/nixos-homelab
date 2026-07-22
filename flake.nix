@@ -58,7 +58,6 @@
           nixosModules = {
             cert-manager = importApply ./nix/modules/cert-manager { inherit self inputs; };
             cilium = importApply ./nix/modules/cilium { inherit self inputs; };
-            client-vpn = importApply ./nix/modules/client-vpn { inherit self inputs; };
             cluster = importApply ./nix/modules/cluster { inherit self inputs; };
             external-dns = importApply ./nix/modules/external-dns { inherit self inputs; };
             homepage = importApply ./nix/modules/homepage { inherit self inputs; };
