@@ -2,23 +2,24 @@
   lib,
   dockerTools,
   bash,
-  coreutils,
-  gnugrep,
-  gettext,
-  dig,
-  curl,
-  wget,
-  kubectl,
-  step-cli,
-  step-kms-plugin,
-  jq,
   cacert,
-  netcat-gnu,
-  unixtools,
-  socat,
-  mtr,
+  coreutils,
+  curl,
+  dig,
+  gettext,
+  gnugrep,
   iperf2,
   iproute2,
+  jq,
+  kubectl,
+  mtr,
+  netcat-gnu,
+  socat,
+  step-cli,
+  step-kms-plugin,
+  unixtools,
+  util-linux,
+  wget,
   xq-xml,
   ...
 }:
@@ -26,24 +27,25 @@ dockerTools.buildImage {
   name = "cluster.local/utils";
   copyToRoot = [
     bash
-    coreutils
-    gnugrep
-    gettext
-    dig
-    curl
-    wget
-    kubectl
-    step-cli
-    step-kms-plugin
-    jq
     cacert
-    netcat-gnu
-    unixtools.procps
-    socat
-    unixtools.ping
-    mtr
+    coreutils
+    curl
+    dig
+    gettext
+    gnugrep
     iperf2
     iproute2
+    jq
+    kubectl
+    mtr
+    netcat-gnu
+    socat
+    step-cli
+    step-kms-plugin
+    unixtools.ping
+    unixtools.procps
+    util-linux
+    wget
     xq-xml
   ];
   config.Env = [
