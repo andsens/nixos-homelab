@@ -57,19 +57,15 @@
           };
           nixosModules = {
             cert-manager = importApply ./nix/modules/cert-manager { inherit self inputs; };
-            cilium = importApply ./nix/modules/cilium { inherit self inputs; };
             cluster = importApply ./nix/modules/cluster { inherit self inputs; };
-            external-dns = importApply ./nix/modules/external-dns { inherit self inputs; };
             homepage = importApply ./nix/modules/homepage { inherit self inputs; };
             k8sss = importApply ./nix/modules/k8sss { inherit self inputs; };
             kubetree-cilium = importApply ./nix/modules/kubetree/cilium { inherit self inputs; };
             kubetree-service-macros = importApply ./nix/modules/kubetree/service-macros {
               inherit self inputs;
             };
-            netutils = importApply ./nix/modules/netutils { inherit self inputs; };
             nfs-provisioner = importApply ./nix/modules/nfs-provisioner { inherit self inputs; };
             postgresql = importApply ./nix/modules/postgresql { inherit self inputs; };
-            privacy-vpn = importApply ./nix/modules/privacy-vpn { inherit self inputs; };
             redis = importApply ./nix/modules/redis { inherit self inputs; };
             smb = importApply ./nix/modules/smb { inherit self inputs; };
           };
