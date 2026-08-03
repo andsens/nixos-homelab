@@ -16,7 +16,7 @@ in
   config = {
     networking.firewall = lib.mkIf enable {
       enable = false;
-      allowedUDPPorts = 68; # DHCP, seems cilium host firewall blocks this
+      allowedUDPPorts = [ 68 ]; # DHCP, seems cilium host firewall blocks this
     };
     services.k3s.manifests.cilium-hostfirewall-policy.enable = enable;
     kubetree.resources.cilium-hostfirewall-policy.policy = {

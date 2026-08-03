@@ -79,8 +79,6 @@ in
     domain = lib.mkOption {
       description = "Domain name of the cluster";
       type = lib.types.str;
-      default = config.networking.domain;
-      defaultText = builtins.literalExpression "config.networking.domain";
     };
     acmeProvider = lib.mkOption {
       description = "The ACME provider that Ingresses should use for obtaining TLS certs";
