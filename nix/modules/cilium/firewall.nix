@@ -7,17 +7,18 @@
 }:
 let
   cfg = config.homelab.cilium.firewall;
+  enable = config.homelab.cilium.enable && cfg.enable;
 in
 {
   options.homelab.cilium.firewall = {
     enable = lib.mkEnableOption "the Cilium host firewall (disables the NixOS firewall)";
   };
   config = {
-    networking.firewall = lib.mkIf cfg.enable {
+    networking.firewall = lib.mkIf enable {
       enable = false;
-      allowedUDPPorts = pkgs.lib.optional cfg.enable 68; # DHCP, seems cilium host firewall blocks this
+      allowedUDPPorts = 68; # DHCP, seems cilium host firewall blocks this
     };
-    services.k3s.manifests.cilium-hostfirewall-policy.enable = cfg.enable;
+    services.k3s.manifests.cilium-hostfirewall-policy.enable = enable;
     kubetree.resources.cilium-hostfirewall-policy.policy = {
       apiVersion = "cilium.io/v2";
       kind = "CiliumClusterwideNetworkPolicy";

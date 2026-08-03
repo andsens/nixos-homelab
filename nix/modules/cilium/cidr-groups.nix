@@ -7,6 +7,7 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.cilium.cidr-groups;
+  enable = config.homelab.cilium.enable && cfg.enable;
 in
 {
   options.homelab.cilium.cidr-groups = {
@@ -23,7 +24,7 @@ in
     };
   };
   config = {
-    services.k3s.manifests.cidrgroups.enable = cfg.enable;
+    services.k3s.manifests.cidrgroups.enable = enable;
     kubetree.resources.cidrgroups = {
       pods = {
         apiVersion = "cilium.io/v2";

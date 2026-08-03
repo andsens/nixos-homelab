@@ -6,13 +6,14 @@
 }:
 let
   cfg = config.homelab.cilium.network-policies;
+  enable = config.homelab.cilium.enable && cfg.enable;
 in
 {
   options.homelab.cilium.network-policies = {
     enable = lib.mkEnableOption "Cilium clusterwide network policies";
   };
   config = {
-    services.k3s.manifests.networkpolicies.enable = cfg.enable;
+    services.k3s.manifests.networkpolicies.enable = enable;
     kubetree.resources.networkpolicies = {
       deny-all = {
         apiVersion = "cilium.io/v2";

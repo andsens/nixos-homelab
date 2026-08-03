@@ -8,6 +8,7 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.cilium.bgp;
+  enable = config.homelab.cilium.enable && cfg.enable;
 in
 {
   options.homelab.cilium.bgp = {
@@ -32,9 +33,9 @@ in
     };
   };
   config = {
-    networking.tempAddresses = lib.mkIf cfg.enable "disabled";
-    networking.firewall.allowedTCPPorts = pkgs.lib.optional cfg.enable 179;
-    services.k3s.manifests.cilium-bgpconfig.enable = cfg.enable;
+    networking.tempAddresses = lib.mkIf enable "disabled";
+    networking.firewall.allowedTCPPorts = pkgs.lib.optional enable 179;
+    services.k3s.manifests.cilium-bgpconfig.enable = enable;
     kubetree.resources.cilium-bgpconfig =
       (lib.optionalAttrs ccfg.enableIPv4 {
         peer4 = {
@@ -81,7 +82,7 @@ in
           apiVersion = "cilium.io/v2";
           kind = "CiliumBGPClusterConfig";
           metadata.name = "router";
-          spec.bgpInstances = lib.optionals cfg.enable [
+          spec.bgpInstances = lib.optionals enable [
             {
               name = "router";
               localASN = cfg.clusterASN;
