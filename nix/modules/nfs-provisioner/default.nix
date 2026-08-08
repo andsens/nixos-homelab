@@ -44,6 +44,31 @@ in
         default = 0;
       };
     };
+    backupPaths = lib.mkOption {
+      description = ''
+        List of paths that should be backed up according to `config.homelab.cluster.backup.volumes`.
+        The paths are constructed using `cfg.path` and `cfg.pathPattern`.
+        Only `.PVC.namespace` and `.PVC.name` placeholders are replaced in the pattern.
+      '';
+      type = lib.types.listOf lib.types.path;
+      default = lib.flatten (
+        lib.mapAttrsToList (
+          namespace: spec:
+          lib.flatten (
+            lib.mapAttrsToList (
+              pvName: paths:
+              map (
+                path:
+                lib.removeSuffix "/" "${cfg.path}/${
+                  builtins.replaceStrings [ "\${.PVC.namespace}" "\${.PVC.name}" ] [ namespace pvName ]
+                    cfg.pathPattern
+                }/${lib.removePrefix "/" path}"
+              ) paths
+            ) spec
+          )
+        ) (config.homelab.cluster.backup.volumes)
+      );
+    };
   };
   config = {
     kubetree.resources.nfs-provisioner.namespace = self.lib.k8s.createNamespace {
