@@ -51,17 +51,26 @@ rec {
           inherit metadata;
           apiVersion = "cluster.local";
           kind = "ServiceDeployment";
-          spec = {
-            inherit allowEgress allowIngress;
-            servicePodSpec =
-              if dataPath != null then
-                lib.recursiveUpdate {
-                  mainContainer.volumeMountsByPath.${dataPath} = "data";
-                  volumesByName.data.persistentVolumeClaim.claimName = metadata.name;
-                } servicePodSpec
-              else
-                servicePodSpec;
-          };
+          spec =
+            lib.recursiveUpdate
+              (removeAttrs (dotPath "spec" { }) [
+                "allowEgress"
+                "allowIngress"
+                "dataPath"
+                "servicePodSpec"
+                "ingressPort"
+              ])
+              {
+                inherit allowEgress allowIngress;
+                servicePodSpec =
+                  if dataPath != null then
+                    lib.recursiveUpdate {
+                      mainContainer.volumeMountsByPath.${dataPath} = "data";
+                      volumesByName.data.persistentVolumeClaim.claimName = metadata.name;
+                    } servicePodSpec
+                  else
+                    servicePodSpec;
+              };
         }
       ]
       ++ (lib.optional (dataPath != null) {
