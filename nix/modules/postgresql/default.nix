@@ -139,7 +139,7 @@ in
       config = {
         apiVersion = "v1";
         kind = "ConfigMap";
-        metadata.name = "config";
+        metadata.name = "postgresql";
         metadata.namespace = "postgresql";
         data."postgresql.conf" = ''
           listen_addresses = '*'
@@ -169,7 +169,7 @@ in
               readinessProbe.tcpSocket.port = "postgresql";
             };
             volumesByName = {
-              config.configMap.name = "config";
+              config.configMap.name = "postgresql";
               run.emptyDir = { };
               tmp.emptyDir = { };
             };

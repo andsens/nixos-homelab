@@ -125,7 +125,7 @@ in
         config = {
           apiVersion = "v1";
           kind = "ConfigMap";
-          metadata.name = "config";
+          metadata.name = "homepage";
           metadata.namespace = "homepage";
           data = {
             "kubernetes.yaml" = builtins.toJSON { mode = "cluster"; };
@@ -228,7 +228,7 @@ in
                 };
             };
             servicePodSpec.volumesByName = {
-              config.configMap.name = "config";
+              config.configMap.name = "homepage";
               logs.emptyDir = { };
               pages.emptyDir = { };
               background-image = {
