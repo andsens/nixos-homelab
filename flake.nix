@@ -60,8 +60,7 @@
             cluster = importApply ./nix/modules/cluster { inherit self inputs; };
             homepage = importApply ./nix/modules/homepage { inherit self inputs; };
             k8sss = importApply ./nix/modules/k8sss { inherit self inputs; };
-            kubetree-cilium = importApply ./nix/modules/kubetree/cilium { inherit self inputs; };
-            kubetree-service-macros = importApply ./nix/modules/kubetree/service-macros {
+            service-macros = importApply ./nix/modules/service-macros {
               inherit self inputs;
             };
             nfs-provisioner = importApply ./nix/modules/nfs-provisioner { inherit self inputs; };

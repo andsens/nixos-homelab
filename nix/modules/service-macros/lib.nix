@@ -1,21 +1,9 @@
-{ lib, ... }:
+{ lib, transform, ... }:
 with builtins;
-rec {
-  mkDotPath =
-    resource: path: default:
-    if path == "." then resource else lib.attrByPath (lib.splitString "." path) default resource;
-  buildMetadata =
-    resource:
-    let
-      dotPath = mkDotPath resource;
-      name = dotPath "metadata.name" (throw "You must specify metadata.name");
-      namespace = dotPath "metadata.namespace" name;
-    in
-    {
-      inherit namespace;
-      labels."app.kubernetes.io/name" = name;
-    }
-    // dotPath "metadata" (throw "You must specify metadata");
+let
+  inherit (transform) mkDotPath buildMetadata;
+in
+{
   transformServiceMacro =
     cfg: resource:
     let
@@ -105,7 +93,7 @@ rec {
             inherit metadata;
             apiVersion = "cluster.local";
             kind = "ServiceNetpols";
-            spec.toPortsFlattened = netpolPorts;
+            spec.ports = netpolPorts;
           }
         ]
         ++ lib.optional (ingressPort != null) ({
@@ -255,7 +243,7 @@ rec {
             annotations."cert-manager.io/cluster-issuer" = cfg.service-macros.acmeProvider;
           };
           spec = {
-            gatewayClassName = "cilium";
+            gatewayClassName = cfg.service-macros.gatewayClassName;
             listeners = [
               {
                 inherit hostname;
@@ -340,67 +328,6 @@ rec {
               }
             ];
           };
-        }
-      ];
-    };
-  transformServiceNetpols =
-    cfg: resource:
-    let
-      dotPath = mkDotPath resource;
-      metadata = buildMetadata resource;
-    in
-    {
-      apiVersion = "v1";
-      kind = "List";
-      items = [
-        {
-          apiVersion = "cilium.io/v2";
-          kind = "CiliumClusterwideNetworkPolicy";
-          metadata = removeAttrs metadata [ "namespace" ] // {
-            name = "pod-to-${metadata.name}";
-          };
-          spec.endpointSelector.matchLabels."cluster.local/${metadata.name}-egress" = "allow";
-          spec.egress = [
-            {
-              toEndpoints = [
-                {
-                  matchLabels = {
-                    "k8s:io.kubernetes.pod.namespace" = metadata.namespace;
-                    "app.kubernetes.io/name" = metadata.name;
-                  };
-                }
-              ];
-              toPortsFlattened = dotPath "spec.toPortsFlattened" [ ];
-            }
-          ];
-        }
-        {
-          apiVersion = "cilium.io/v2";
-          kind = "CiliumNetworkPolicy";
-          metadata = metadata // {
-            name = "${metadata.name}-from-pod";
-          };
-          spec.endpointSelector.matchLabels."app.kubernetes.io/name" = metadata.name;
-          spec.ingress = [
-            {
-              fromEndpoints = [
-                {
-                  matchExpressions = [
-                    {
-                      "key" = "k8s:io.kubernetes.pod.namespace";
-                      "operator" = "Exists";
-                    }
-                    {
-                      "key" = "cluster.local/${metadata.name}-egress";
-                      "operator" = "In";
-                      "values" = [ "allow" ];
-                    }
-                  ];
-                }
-              ];
-              toPortsFlattened = dotPath "spec.toPortsFlattened" [ ];
-            }
-          ];
         }
       ];
     };

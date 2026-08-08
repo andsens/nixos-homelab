@@ -20,7 +20,7 @@ in
         apiVersion = "cluster.local";
         kind = "ServiceNetpols";
         metadata.name = "k8sss";
-        spec.toPortsFlattened = [ config.k8sss.nodePort ];
+        spec.ports = [ config.k8sss.nodePort ];
       };
       netpol-world = {
         apiVersion = "cilium.io/v2";

@@ -101,20 +101,19 @@ in
   };
   imports = [
     inputs.kubetree.nixosModules.default
-    self.nixosModules.kubetree-cilium
-    self.nixosModules.kubetree-service-macros
+    self.nixosModules.service-macros
     inputs.setup-secrets.nixosModules.default
   ];
   config = lib.mkIf ccfg.enable {
     systemd.services."setup-secrets".after = [ "k3s.service" ];
     services.k3s.enable = true;
     kubetree = {
-      k3s.enable = true;
-      cilium.enable = true;
+      kubernetes.enable = true;
       service-macros = {
         enable = true;
         domain = ccfg.domain;
       };
+      k3s.enable = true;
     };
 
     environment.systemPackages = [

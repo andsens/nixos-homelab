@@ -7,10 +7,10 @@
 let
   cfg = config.kubetree.service-macros;
   transform = inputs.kubetree.lib.transform;
-  sm = import ./lib.nix { inherit lib; };
+  sm = import ./lib.nix { inherit lib transform; };
 in
 {
-  key = "${toString __curPos.file}#modules.nixos.kubetree-service-macros";
+  key = "${toString __curPos.file}#modules.nixos.service-macros";
   options.kubetree.service-macros = {
     enable = lib.mkEnableOption "service macro transformers";
     domain = lib.mkOption {
@@ -18,6 +18,10 @@ in
       type = lib.types.str;
       default = config.networking.domain;
       defaultText = builtins.literalExpression "config.networking.domain";
+    };
+    gatewayClassName = lib.mkOption {
+      description = "Name of the Gateway class that should set on all gateways generated through the \"ServiceGateway\" macro";
+      type = lib.types.str;
     };
     acmeProvider = lib.mkOption {
       description = "The ACME provider that Ingresses should use for obtaining TLS certs";
@@ -62,11 +66,6 @@ in
         ];
         ServiceGateway._transformers = [
           sm.transformServiceGateway
-          transform.transformResource
-          transform.flattenResourceList
-        ];
-        ServiceNetpols._transformers = [
-          sm.transformServiceNetpols
           transform.transformResource
           transform.flattenResourceList
         ];
