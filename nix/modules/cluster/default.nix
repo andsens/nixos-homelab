@@ -85,7 +85,7 @@ in
       type = lib.types.str;
     };
     dataDir = lib.mkOption {
-      description = "Path for services whose data should persist across cluster iterations (hostPath mount)";
+      description = "Location of the k3s data directory";
       type = lib.types.str;
     };
     backup.hostPaths = lib.mkOption {
